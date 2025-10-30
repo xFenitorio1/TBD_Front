@@ -6,8 +6,8 @@
         <v-col cols="12" md="6" class="d-none d-md-flex align-center justify-center pa-12">
           <div class="text-center">
             <v-icon size="120" color="white" class="mb-6">mdi-warehouse</v-icon>
-            <h1 class="text-h2 font-weight-bold text-white mb-4">Inventory Pro</h1>
-            <p class="text-h6 text-white text-opacity-80">Professional Inventory Management System</p>
+            <h1 class="text-h2 font-weight-bold text-white mb-4">Nombre mamalon</h1>
+            <p class="text-h6 text-white text-opacity-80">Eslogan mamalo</p>
           </div>
         </v-col>
 
@@ -15,14 +15,14 @@
         <v-col cols="12" md="6" class="d-flex align-center justify-center pa-12">
           <v-card class="register-card pa-8" max-width="500" elevation="8">
             <div class="text-center mb-8">
-              <h2 class="text-h4 font-weight-bold text-primary mb-2">Create Account</h2>
-              <p class="text-body-1 text-medium-emphasis">Join our inventory management system</p>
+              <h2 class="text-h4 font-weight-bold text-primary mb-2">Crear cuenta</h2>
+              <p class="text-body-1 text-medium-emphasis">Algo de algo</p>
             </div>
 
             <v-form ref="registerForm" v-model="isFormValid" @submit.prevent="handleRegister">
               <v-text-field
                 v-model="fullName"
-                label="Full Name"
+                label="Nombre completo"
                 :rules="nameRules"
                 required
                 prepend-icon="mdi-account"
@@ -43,7 +43,7 @@
 
               <v-text-field
                 v-model="password"
-                label="Password"
+                label="Contraseña"
                 type="password"
                 :rules="passwordRules"
                 required
@@ -54,7 +54,7 @@
 
               <v-text-field
                 v-model="confirmPassword"
-                label="Confirm Password"
+                label="Confirmar contraseña"
                 type="password"
                 :rules="confirmPasswordRules"
                 required
@@ -72,7 +72,7 @@
                 :disabled="!isFormValid"
                 class="mb-4"
               >
-                Create Account
+                Crear cuenta
               </v-btn>
 
               <v-alert
@@ -97,9 +97,9 @@
               <v-divider class="my-6" />
               <div class="text-center">
                 <p class="text-body-2 text-medium-emphasis">
-                  Already have an account?
+                  Ya tienes una cuenta?
                   <router-link to="/login" class="text-primary text-decoration-none">
-                    Sign in here
+                    Inicia sesión aca.
                   </router-link>
                 </p>
               </div>
@@ -112,12 +112,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../store/auth'
 
 const router = useRouter()
-const authStore = useAuthStore()
 
 const fullName = ref('')
 const email = ref('')
@@ -129,48 +127,63 @@ const error = ref('')
 const success = ref('')
 
 const nameRules = [
-  v => !!v || 'Full name is required',
-  v => v.length >= 2 || 'Name must be at least 2 characters'
+  v => !!v || 'El nombre completo es obligatorio',
+  v => v.length >= 2 || 'El nombre debe tener al menos 2 caracteres'
 ]
 
 const emailRules = [
-  v => !!v || 'Email is required',
-  v => /.+@.+\..+/.test(v) || 'Email must be valid'
+  v => !!v || 'El email es obligatorio',
+  v => /.+@.+\..+/.test(v) || 'El email debe ser válido'
 ]
 
 const passwordRules = [
-  v => !!v || 'Password is required',
-  v => v.length >= 6 || 'Password must be at least 6 characters',
-  v => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(v) || 'Password must contain at least one lowercase letter, one uppercase letter, and one number'
+  v => !!v || 'La contraseña es requerida',
+  v => v.length >= 6 || 'La contraseña debe tener al menos 6 caracteres',
+  v => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(v) || 'La contraseña debe incluir al menos una mayúscula, una minúscula y un número'
 ]
 
 const confirmPasswordRules = [
-  v => !!v || 'Please confirm your password',
-  v => v === password.value || 'Passwords do not match'
+  v => !!v || 'Por favor confirma tu contraseña',
+  v => v === password.value || 'Las contraseñas no coinciden'
 ]
 
 const handleRegister = async () => {
   if (!isFormValid.value) return
-  
+
   isLoading.value = true
   error.value = ''
   success.value = ''
-  
+
   try {
-    // Here you would typically call your registration API
-    // For now, we'll simulate a successful registration
-    await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call
-    
-    // Simulate successful registration
-    success.value = 'Account created successfully! Redirecting to login...'
-    
-    // Redirect to login after a short delay
-    setTimeout(() => {
-      router.push('/login')
-    }, 2000)
-    
+    const payload = {
+      name_user: fullName.value,
+      email: email.value,
+      password: password.value,
+      role: 'ADMINISTRATOR'
+    }
+
+    console.log("Register payload:", payload)
+
+    const res = await fetch('http://localhost:8020/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    })
+
+    let data = {}
+    try { data = await res.json() } catch (e) {}
+
+    if (!res.ok) {
+      error.value = data.message || data.error || `Error ${res.status}`
+      return
+    }
+
+    success.value = 'Cuenta creada correctamente. Redirigiendo al login...'
+    // setTimeout(() => router.push('/login'), 1500)
   } catch (err) {
-    error.value = 'An unexpected error occurred during registration'
+    error.value = 'Error de conexión con el servidor'
   } finally {
     isLoading.value = false
   }
@@ -185,5 +198,7 @@ const handleRegister = async () => {
 
 .register-card {
   border-radius: 16px;
+  width: 500px;
+  max-width: 100%;
 }
 </style>
