@@ -7,7 +7,7 @@
           <div class="text-center">
             <v-icon size="120" color="white" class="mb-6">mdi-warehouse</v-icon>
             <h1 class="text-h2 font-weight-bold text-white mb-4">Nombre mamalon</h1>
-            <p class="text-h6 text-white text-opacity-80">Eslogan mamalo</p>
+            <p class="text-h6 text-white text-opacity-80">Eslogansfgsfgsf mamalo</p>
           </div>
         </v-col>
 

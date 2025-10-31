@@ -11,10 +11,10 @@
         <span class="text-h4 font-weight-bold text-white">StockOverflowed</span>
       </div>
       <div class="text-h6 text-white font-weight-light mt-8">
-        Algo mamalon
+        Algo mamalón
       </div>
       <div class="text-body-1 text-white mt-4 opacity-75">
-        Algo mamalon x2
+        Algo mamalón x2
       </div>
     </v-col>
 
@@ -58,6 +58,7 @@
               class="mb-6"
             />
 
+            <!-- Mensaje de error -->
             <v-alert
               v-if="error"
               type="error"
@@ -129,13 +130,13 @@ const isLoading = ref(false)
 const error = ref('')
 
 const emailRules = [
-  v => !!v || 'Email is required',
-  v => /.+@.+\..+/.test(v) || 'Email must be valid'
+  v => !!v || 'El correo es obligatorio',
+  v => /.+@.+\..+/.test(v) || 'Debe ser un correo válido'
 ]
 
 const passwordRules = [
-  v => !!v || 'Password is required',
-  v => v.length >= 6 || 'Password must be at least 6 characters'
+  v => !!v || 'La contraseña es obligatoria',
+  v => v.length >= 6 || 'Debe tener al menos 6 caracteres'
 ]
 
 const handleLogin = async () => {
@@ -147,10 +148,10 @@ const handleLogin = async () => {
   try {
     const result = await authStore.login(email.value, password.value)
     if (!result.success) {
-      error.value = result.error
+      error.value = result.message || 'Error al iniciar sesión'
     }
   } catch (err) {
-    error.value = 'An unexpected error occurred'
+    error.value = 'Ocurrió un error inesperado'
   } finally {
     isLoading.value = false
   }
