@@ -393,9 +393,7 @@ const getStoreName = (storeId) => {
 // 🔹 Cargar inventario de la tienda asociada al usuario
 onMounted(async () => {
   await inventoryStore.fetchProductsFromStore()
-  await inventoryStore.fetchStores()
   await inventoryStore.fetchInventoryByUser()
-  console.log('📦 Inventario cargado:', inventoryStore.inventory)
   
 
   // selecciona automáticamente la tienda del usuario

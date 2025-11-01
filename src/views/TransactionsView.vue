@@ -509,7 +509,6 @@ const saveTransaction = async () => {
   try {
     if (isEditing.value) {
       // Update existing transaction
-      console.log('Updating transaction:', editingTransaction.value)
     } else {
       // Create new transaction
       inventoryStore.addTransaction(editingTransaction.value)

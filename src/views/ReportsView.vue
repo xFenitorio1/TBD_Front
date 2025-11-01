@@ -567,7 +567,6 @@ const generateCSVReport = () => {
 
 const restockProduct = (item) => {
   // Implementation for restocking products
-  console.log('Restocking product:', item)
 }
 
 const getStoreName = (storeId) => {

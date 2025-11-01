@@ -241,16 +241,12 @@ const editingProduct = ref({
 // Table headers
 const headers = [
   { title: 'ID', key: 'id', sortable: true },
-  { title: 'Nombre', key: 'name', sortable: true },
-  { title: 'Descripción', key: 'description', sortable: false },
+  { title: 'Nombre', key: 'name_product', sortable: true },
+  { title: 'Descripción', key: 'description_product', sortable: false },
   { title: 'Precio', key: 'price', sortable: true },
   { title: 'SKU', key: 'sku', sortable: true },
-  { title: 'Categoría', key: 'category', sortable: true },
   { title: 'Acciones', key: 'actions', sortable: false, width: '120px' }
 ]
-
-// Categories
-const categories = ['Electrónicos', 'Accesorios', 'Suministros de Oficina', 'Muebles', 'Ropa']
 
 // Computed properties
 const filteredProducts = computed(() => {

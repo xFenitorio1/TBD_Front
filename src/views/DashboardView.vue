@@ -4,7 +4,6 @@
     <div class="d-flex align-center justify-space-between mb-6">
       <div>
         <h1 class="text-h3 font-weight-bold text-primary">Panel de Control</h1>
-        <p class="text-body-1 text-medium-emphasis">¡Bienvenido de vuelta, {{ user?.name }}!</p>
       </div>
       <v-chip
         :color="user?.role === 'admin' ? 'success' : 'info'"

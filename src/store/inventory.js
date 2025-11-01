@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import api from '../api/axios'
 import { useProductStore } from './product'
 
+
 export const useInventoryStore = defineStore('inventory', () => {
   const stores = ref([])
   const inventory = ref([])
@@ -36,23 +37,18 @@ export const useInventoryStore = defineStore('inventory', () => {
       const productStore = useProductStore()
       await productStore.fetchProducts()
       products.value = productStore.products
-      console.log('Productos:', products.value)
     } catch (err) {
       console.error('Error cargando productos desde ProductStore:', err)
     }
   }
 
-  const fetchStores = async () => {
-    try {
-      const res = await api.get('/store')
-      stores.value = res.data
-    } catch (err) {
-      console.error('Error cargando tiendas:', err)
-    }
-  }
-
   const fetchInventoryByUser = async () => {
     try {
+
+      const { useAuthStore } = await import('./auth')
+      const authStore = useAuthStore()
+      const user = authStore.user
+
       if (!user.storeU_id) {
         console.warn('⚠️ Usuario sin storeU_id')
         return
@@ -91,7 +87,6 @@ export const useInventoryStore = defineStore('inventory', () => {
     getProductById,
     getStoreById,
     getInventoryByStore,
-    fetchStores,
     fetchProductsFromStore,
     fetchInventoryByUser,
     persistUpdateStock

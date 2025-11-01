@@ -149,10 +149,10 @@ const handleSave = () => {
     email: localUser.value.email,
     password: localUser.value.password,
     role: localUser.value.role,
-    id_storeu: authStore.user?.storeU_id,
+    storeU_id: authStore.user?.storeU_id,
   }
 
-  console.log('storeU_id:', authStore.user?.storeU_id, typeof authStore.user?.storeU_id)
+
 
   emit('save', payload)
 }

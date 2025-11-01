@@ -50,7 +50,9 @@
               v-model="password"
               label="Contraseña"
               placeholder="Ingresa tu contraseña"
-              type="password"
+              :type="showPassword ? 'text' : 'password'"
+              :append-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+              @click:append="showPassword = !showPassword"
               :rules="passwordRules"
               required
               prepend-icon="mdi-lock"
@@ -101,7 +103,7 @@
               </p>
               <div class="d-flex flex-column gap-1">
                 <div class="text-caption">
-                  <strong>Admin:</strong> admin@store.com / admin123
+                  <strong>Admin:</strong> gfsgf@gdsgf.cl / Asdasd1
                 </div>
                 <div class="text-caption">
                   <strong>Empleado:</strong> employee@store.com / emp123
@@ -123,6 +125,7 @@ import { useRouter } from 'vue-router'
 const authStore = useAuthStore()
 const router = useRouter()
 
+const showPassword = ref(false)
 const email = ref('')
 const password = ref('')
 const isFormValid = ref(false)

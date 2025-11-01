@@ -6,7 +6,7 @@
         <v-col cols="12" md="6" class="d-none d-md-flex align-center justify-center pa-12">
           <div class="text-center">
             <v-icon size="120" color="white" class="mb-6">mdi-warehouse</v-icon>
-            <h1 class="text-h2 font-weight-bold text-white mb-4">Nombre mamalon</h1>
+            <h1 class="text-h2 font-weight-bold text-white mb-4">StockOverflowed</h1>
             <p class="text-h6 text-white text-opacity-80">Eslogansfgsfgsf mamalo</p>
           </div>
         </v-col>
@@ -162,7 +162,6 @@ const handleRegister = async () => {
       role: 'ADMINISTRATOR'
     }
 
-    console.log("Register payload:", payload)
 
     const res = await fetch('http://localhost:8020/auth/register', {
       method: 'POST',

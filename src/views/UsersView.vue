@@ -104,8 +104,6 @@ const saveUser = async (userData) => {
   isSaving.value = true
 
   try {
-    console.log('➡️ Enviando usuario al backend:', userData)
-
     const response = await fetch('http://localhost:8020/auth/register', {
       method: 'POST',
       headers: {
@@ -117,19 +115,15 @@ const saveUser = async (userData) => {
 
     if (!response.ok) {
       const text = await response.text()
-      console.error('❌ Error del backend:', text)
+      console.error('Error del backend:', text)
       throw new Error(text || `Error ${response.status}`)
     }
 
-    // 👇 El backend devuelve texto, no JSON
     let savedUser
     const text = await response.text()
-    console.log('📨 Respuesta backend:', text)
-
     try {
-      savedUser = JSON.parse(text) // si por casualidad es JSON válido
+      savedUser = JSON.parse(text)
     } catch {
-      // si es texto plano, lo adaptamos
       savedUser = { ...userData, id: Date.now(), lastLogin: null }
     }
 
