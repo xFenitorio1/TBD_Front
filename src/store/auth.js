@@ -6,7 +6,10 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const token = ref(null)
   const isAuthenticated = computed(() => !!user.value)
-  const isAdmin = computed(() => user.value?.role === 'ROLE_ADMINISTRATOR')
+  const isAdmin = computed(() => {
+  const role = user.value?.role?.toUpperCase()
+  return role === 'ADMINISTRATOR' || role === 'ROLE_ADMINISTRATOR'
+})
   const router = useRouter()
 
   const decodeJwt = (token) => {
