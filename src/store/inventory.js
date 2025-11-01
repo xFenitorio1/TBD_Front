@@ -1,120 +1,99 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import api from '../api/axios'
+import { useProductStore } from './product'
 
 export const useInventoryStore = defineStore('inventory', () => {
-  // Mock data
-  const products = ref([
-    { id: 1, name: 'Laptop Dell XPS 13', category: 'Electronics', price: 1299.99, description: 'High-performance laptop' },
-    { id: 2, name: 'Wireless Mouse', category: 'Accessories', price: 29.99, description: 'Ergonomic wireless mouse' },
-    { id: 3, name: 'Mechanical Keyboard', category: 'Accessories', price: 149.99, description: 'RGB mechanical keyboard' },
-    { id: 4, name: 'Monitor 27"', category: 'Electronics', price: 399.99, description: '4K Ultra HD monitor' },
-    { id: 5, name: 'USB-C Cable', category: 'Accessories', price: 19.99, description: 'High-speed USB-C cable' }
-  ])
-  
-  const stores = ref([
-    { id: 1, name: 'Downtown Store', address: '123 Main St, Downtown', phone: '(555) 123-4567' },
-    { id: 2, name: 'Mall Location', address: '456 Mall Ave, Shopping Center', phone: '(555) 234-5678' },
-    { id: 3, name: 'Airport Store', address: '789 Airport Blvd, Terminal 2', phone: '(555) 345-6789' }
-  ])
-  
-  const inventory = ref([
-    { id: 1, productId: 1, storeId: 1, quantity: 15, minStock: 5 },
-    { id: 2, productId: 2, storeId: 1, quantity: 50, minStock: 10 },
-    { id: 3, productId: 3, storeId: 1, quantity: 8, minStock: 5 },
-    { id: 4, productId: 1, storeId: 2, quantity: 12, minStock: 5 },
-    { id: 5, productId: 4, storeId: 2, quantity: 6, minStock: 3 },
-    { id: 6, productId: 5, storeId: 3, quantity: 25, minStock: 10 },
-    { id: 7, productId: 2, storeId: 3, quantity: 3, minStock: 10 }
-  ])
-  
-  const transactions = ref([
-    { id: 1, type: 'sale', productId: 1, storeId: 1, quantity: 2, timestamp: '2024-01-15T10:30:00Z', userId: 1 },
-    { id: 2, type: 'reception', productId: 2, storeId: 1, quantity: 20, timestamp: '2024-01-15T14:20:00Z', userId: 1 },
-    { id: 3, type: 'transfer', productId: 3, storeId: 1, storeIdTo: 2, quantity: 5, timestamp: '2024-01-16T09:15:00Z', userId: 1 }
-  ])
+  const stores = ref([])
+  const inventory = ref([])
+  const products = ref([])
+  const transactions = ref([])
 
-  // Computed properties
-  const totalProducts = computed(() => products.value.length)
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+
   const totalStores = computed(() => stores.value.length)
-  const lowStockAlerts = computed(() => {
-    return inventory.value.filter(item => item.quantity <= item.minStock)
-  })
+  const totalProducts = computed(() => products.value.length)
+  const lowStockAlerts = computed(() =>
+    inventory.value.filter(item => item.quantity <= item.minStock)
+  )
 
-  const getProductById = (id) => {
-    return products.value.find(p => p.id === id)
-  }
-
-  const getStoreById = (id) => {
-    return stores.value.find(s => s.id === id)
-  }
+  const getProductById = (id) => products.value.find(p => p.id === id)
+  const getStoreById = (id) => stores.value.find(s => s.id === id)
 
   const getInventoryByStore = (storeId) => {
     return inventory.value
-      .filter(item => item.storeId === storeId)
+      .filter(item => item.id_storein === storeId)
       .map(item => ({
         ...item,
-        product: getProductById(item.productId),
-        store: getStoreById(item.storeId)
+        product: getProductById(item.id_productin),
+        store: getStoreById(item.id_storein)
       }))
   }
 
-  const updateStock = (inventoryId, newQuantity) => {
-    const item = inventory.value.find(i => i.id === inventoryId)
-    if (item) {
-      item.quantity = newQuantity
+  // 🔹 Cargar productos desde el store de productos
+  const fetchProductsFromStore = async () => {
+    try {
+      const productStore = useProductStore()
+      await productStore.fetchProducts()
+      products.value = productStore.products
+      console.log('Productos:', products.value)
+    } catch (err) {
+      console.error('Error cargando productos desde ProductStore:', err)
     }
   }
 
-  // Mock actions (no API calls)
-  const fetchProducts = async () => {
-    // Mock delay to simulate API call
-    await new Promise(resolve => setTimeout(resolve, 100))
-    return products.value
-  }
-
   const fetchStores = async () => {
-    await new Promise(resolve => setTimeout(resolve, 100))
-    return stores.value
+    try {
+      const res = await api.get('/store')
+      stores.value = res.data
+    } catch (err) {
+      console.error('Error cargando tiendas:', err)
+    }
   }
 
-  const fetchInventory = async () => {
-    await new Promise(resolve => setTimeout(resolve, 100))
-    return inventory.value
+  const fetchInventoryByUser = async () => {
+    try {
+      if (!user.storeU_id) {
+        console.warn('⚠️ Usuario sin storeU_id')
+        return
+      }
+      const res = await api.get(`/inventory/store/${user.storeU_id}`)
+      inventory.value = res.data
+    } catch (err) {
+      console.error('Error cargando inventario:', err)
+    }
   }
 
-  const fetchTransactions = async () => {
-    await new Promise(resolve => setTimeout(resolve, 100))
-    return transactions.value
-  }
-
-  const refreshAll = async () => {
-    await new Promise(resolve => setTimeout(resolve, 200))
-    // Data is already loaded, no need to fetch
-  }
-
-  const persistUpdateStock = async (inventoryId, newQuantity) => {
-    await new Promise(resolve => setTimeout(resolve, 100))
-    updateStock(inventoryId, newQuantity)
+  const persistUpdateStock = async (inventoryItem) => {
+    try {
+      await api.put('/inventory/update', inventoryItem)
+      const item = inventory.value.find(i =>
+        i.id_storein === inventoryItem.id_storein &&
+        i.id_productin === inventoryItem.id_productin
+      )
+      if (item) {
+        item.quantity = inventoryItem.quantity
+        item.minStock = inventoryItem.minStock
+      }
+    } catch (err) {
+      console.error('Error actualizando inventario:', err)
+    }
   }
 
   return {
-    products,
     stores,
     inventory,
+    products,
     transactions,
-    totalProducts,
     totalStores,
+    totalProducts,
     lowStockAlerts,
     getProductById,
     getStoreById,
     getInventoryByStore,
-    updateStock,
-    // mock actions
-    fetchProducts,
     fetchStores,
-    fetchInventory,
-    fetchTransactions,
-    refreshAll,
+    fetchProductsFromStore,
+    fetchInventoryByUser,
     persistUpdateStock
   }
 })

@@ -73,7 +73,7 @@
               <v-icon size="20" color="white">mdi-package-variant</v-icon>
             </v-avatar>
             <div>
-              <div class="font-weight-medium">{{ item.product?.name }}</div>
+              <div class="font-weight-medium">{{ item.product?.name_product }}</div>
               <div class="text-caption text-medium-emphasis">{{ item.product?.sku }}</div>
             </div>
           </div>
@@ -81,7 +81,7 @@
 
         <template v-slot:item.quantity="{ item }">
           <div class="d-flex align-center">
-            <span class="font-weight-bold mr-2">{{ item.quantity }}</span>
+            <span class="font-weight-bold mr-2">{{ item.stock_inventory }}</span>
             <v-chip
               v-if="item.quantity <= item.minStock"
               color="error"
@@ -253,7 +253,7 @@
                     <v-icon>mdi-numeric</v-icon>
                   </template>
                   <v-list-item-title>Cantidad Actual</v-list-item-title>
-                  <v-list-item-subtitle>{{ selectedInventoryItem.quantity }}</v-list-item-subtitle>
+                  <v-list-item-subtitle>{{ selectedInventoryItem.stock_inventory }}</v-list-item-subtitle>
                 </v-list-item>
                 <v-list-item>
                   <template v-slot:prepend>
@@ -305,7 +305,6 @@ const newMinStock = ref(0)
 const headers = [
   { title: 'Producto', key: 'product', sortable: true },
   { title: 'Cantidad', key: 'quantity', sortable: true },
-  { title: 'Stock Mínimo', key: 'minStock', sortable: true },
   { title: 'Acciones', key: 'actions', sortable: false, width: '120px' }
 ]
 
@@ -316,7 +315,7 @@ const stockStatuses = [
   { title: 'Stock Alto', value: 'high' }
 ]
 
-// Computed properties
+// Computed
 const stores = computed(() => inventoryStore.stores)
 
 const filteredInventory = computed(() => {
@@ -333,13 +332,9 @@ const filteredInventory = computed(() => {
   
   if (selectedStatus.value) {
     inventory = inventory.filter(item => {
-      if (selectedStatus.value === 'low') {
-        return item.quantity <= item.minStock
-      } else if (selectedStatus.value === 'normal') {
-        return item.quantity > item.minStock && item.quantity <= item.minStock * 2
-      } else if (selectedStatus.value === 'high') {
-        return item.quantity > item.minStock * 2
-      }
+      if (selectedStatus.value === 'low') return item.quantity <= item.minStock
+      if (selectedStatus.value === 'normal') return item.quantity > item.minStock && item.quantity <= item.minStock * 2
+      if (selectedStatus.value === 'high') return item.quantity > item.minStock * 2
       return true
     })
   }
@@ -364,13 +359,10 @@ const closeStockDialog = () => {
 
 const updateStock = async () => {
   if (!stockForm.value.validate()) return
-  
   isUpdating.value = true
-  
   try {
     if (selectedInventoryItem.value) {
       inventoryStore.updateStock(selectedInventoryItem.value.id, newQuantity.value)
-      // Update min stock if needed
       if (newMinStock.value !== selectedInventoryItem.value.minStock) {
         selectedInventoryItem.value.minStock = newMinStock.value
       }
@@ -398,14 +390,16 @@ const getStoreName = (storeId) => {
   return store?.name || 'Tienda Desconocida'
 }
 
-onMounted(() => {
-  // Initialize with first store if available
-  if (stores.value.length > 0) {
-    selectedStore.value = stores.value[0].id
-  }
+// 🔹 Cargar inventario de la tienda asociada al usuario
+onMounted(async () => {
+  await inventoryStore.fetchProductsFromStore()
+  await inventoryStore.fetchStores()
+  await inventoryStore.fetchInventoryByUser()
+  console.log('📦 Inventario cargado:', inventoryStore.inventory)
+  
+
+  // selecciona automáticamente la tienda del usuario
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  selectedStore.value = user.storeU_id
 })
 </script>
-
-<style scoped>
-/* No custom CSS needed - using Vuetify's built-in styling */
-</style>
