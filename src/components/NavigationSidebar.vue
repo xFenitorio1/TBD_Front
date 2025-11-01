@@ -9,7 +9,7 @@
     <v-list-item
       prepend-avatar="https://randomuser.me/api/portraits/men/85.jpg"
       :title="user?.name || 'Usuario'"
-      :subtitle="user?.role === 'admin' ? 'Administrador' : 'Empleado'"
+      :subtitle="isAdmin ? 'Administrador' : 'Empleado'"
       nav
     >
       <template v-slot:append>
@@ -69,7 +69,7 @@
         prepend-icon="mdi-account-group"
         title="Usuarios"
         value="users"
-        @click="navigateTo('/users')"
+        @click="() => { console.log('👆 Click en Usuarios'); navigateTo('/users') }"
         :active="$route.path === '/users'"
       />
     </v-list>
@@ -90,7 +90,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../store/auth'
 
@@ -103,15 +103,17 @@ const rail = ref(false)
 const user = computed(() => authStore.user)
 const isAdmin = computed(() => authStore.isAdmin)
 
+
 const navigateTo = (path) => {
-  router.push(path)
+  router.push(path).catch(err => {
+    console.error('Error al navegar:', err)
+  })
 }
 
 const logout = () => {
   authStore.logout()
 }
 </script>
-
 <style scoped>
 .sidebar {
   background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
