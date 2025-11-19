@@ -12,19 +12,7 @@
     <v-card class="mb-6" elevation="2" rounded="lg">
       <v-card-text>
         <v-row>
-          <v-col cols="12" md="3">
-            <v-select
-              v-model="selectedStore"
-              label="Seleccionar Tienda"
-              :items="stores"
-              item-title="name"
-              item-value="id"
-              variant="outlined"
-              required
-              hide-details
-            />
-          </v-col>
-          <v-col cols="12" md="3">
+          <v-col cols="12" md="5">
             <v-text-field
               v-model="searchQuery"
               label="Buscar productos"
@@ -35,7 +23,7 @@
               hide-details
             />
           </v-col>
-          <v-col cols="12" md="3">
+          <v-col cols="12" md="4">
             <v-select
               v-model="selectedStatus"
               label="Estado del Stock"
@@ -362,7 +350,7 @@ const updateStock = async () => {
   isUpdating.value = true
   try {
     if (selectedInventoryItem.value) {
-      inventoryStore.updateStock(selectedInventoryItem.value.id, newQuantity.value)
+      inventoryStore.updateInventoryStock(selectedInventoryItem.value.id, newQuantity.value)
       if (newMinStock.value !== selectedInventoryItem.value.minStock) {
         selectedInventoryItem.value.minStock = newMinStock.value
       }
@@ -396,7 +384,6 @@ onMounted(async () => {
   await inventoryStore.fetchInventoryByUser()
   
 
-  // selecciona automáticamente la tienda del usuario
   const user = JSON.parse(localStorage.getItem('user') || '{}')
   selectedStore.value = user.storeU_id
 })

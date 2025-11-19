@@ -58,3 +58,4 @@ defineEmits(['update:searchQuery', 'update:selectedRole', 'reset-filters'])
 
 const { roles } = useRoleUtils()
 </script>
+

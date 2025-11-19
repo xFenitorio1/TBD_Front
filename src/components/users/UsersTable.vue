@@ -121,3 +121,4 @@ const headers = [
   { title: 'Acciones', key: 'actions', sortable: false, width: '160px' }
 ]
 </script>
+

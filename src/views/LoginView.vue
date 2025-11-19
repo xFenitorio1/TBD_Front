@@ -103,7 +103,7 @@
               </p>
               <div class="d-flex flex-column gap-1">
                 <div class="text-caption">
-                  <strong>Admin:</strong> gfsgf@gdsgf.cl / Asdasd1
+                  <strong>Admin:</strong> carla.diaz@valpo.com / hashedpass789
                 </div>
                 <div class="text-caption">
                   <strong>Empleado:</strong> employee@store.com / emp123
