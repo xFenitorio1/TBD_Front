@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import axios from 'axios'
+import api from '../api/axios'
 
 export const useTransactionStore = defineStore('transactions', {
   state: () => ({
@@ -9,10 +9,13 @@ export const useTransactionStore = defineStore('transactions', {
   }),
 
   actions: {
+    // --------------------------------------------------
+    // 🟦 GET: Obtener todas las transacciones
+    // --------------------------------------------------
     async fetchTransactions() {
       try {
         this.loading = true
-        const res = await axios.get('/api/transactions')
+        const res = await api.get('/api/transactions/myStoreTransactions')
         this.transactions = res.data
       } catch (err) {
         console.error(err)
@@ -22,21 +25,118 @@ export const useTransactionStore = defineStore('transactions', {
       }
     },
 
-    async createTransaction(transaction) {
-      const res = await axios.post('/api/transactions', transaction)
-      await this.fetchTransactions()
-      return res.data
+    // --------------------------------------------------
+    // 🟦 GET: Obtener transacción por ID
+    // /api/transactions/{id}
+    // --------------------------------------------------
+    async fetchTransactionById(id) {
+      try {
+        const res = await api.get(`/transactions/${id}`)
+        return res.data
+      } catch (err) {
+        console.error('Error obteniendo transacción por ID:', err)
+        throw err
+      }
     },
 
-    async transferInventory(transferData) {
-      const res = await axios.put('/api/transactions/transfer', transferData)
-      await this.fetchTransactions()
-      return res.data
+    // --------------------------------------------------
+    // 🟦 GET: Buscar por TYPE
+    // /api/transactions/searchByType?type=VENTA
+    // --------------------------------------------------
+    async fetchTransactionsByType(type) {
+      try {
+        const res = await api.get(`/transactions/searchByType`, {
+          params: { type }
+        })
+        return res.data
+      } catch (err) {
+        console.error('Error buscando transacciones por tipo:', err)
+        throw err
+      }
     },
 
+    // --------------------------------------------------
+    // 🟦 GET: Buscar por fecha exacta
+    // /api/transactions/searchByDate?date=2025-01-01
+    // --------------------------------------------------
+    async fetchTransactionsByDate(date) {
+      try {
+        const res = await api.get(`/transactions/searchByDate`, {
+          params: { date }
+        })
+        return res.data
+      } catch (err) {
+        console.error('Error buscando transacciones por fecha:', err)
+        throw err
+      }
+    },
+
+    // --------------------------------------------------
+    // 🟦 GET: Transacciones inusuales
+    // /api/transactions/unusual
+    // --------------------------------------------------
     async getUnusualTransactions() {
-      const res = await axios.get('/api/transactions/unusual')
-      return res.data
+      try {
+        const res = await api.get('/transactions/unusual')
+        return res.data
+      } catch (err) {
+        console.error('Error buscando transacciones inusuales:', err)
+        throw err
+      }
+    },
+
+    // --------------------------------------------------
+    // 🟦 GET: Transacciones por tienda según ID de usuario
+    // /api/transactions/myStoreTransactions?id_user=XX
+    // --------------------------------------------------
+    async fetchStoreTransactions(storeId) {
+      try {
+        const res = await api.get(`/transactions/myStoreTransactions`, {
+          params: { storeId }
+        })
+            this.transactions = res.data
+
+        return res.data
+        
+      } catch (err) {
+        console.error('Error obteniendo transacciones de tienda:', err)
+        throw err
+      }
+    },
+
+    // Alias for fetchStoreTransactions
+    async fetchTransactionsByUser(id_user) {
+      return this.fetchStoreTransactions(id_user)
+    },
+
+    // --------------------------------------------------
+    // 🟩 POST: Crear transacción
+    // /api/transactions
+    // --------------------------------------------------
+    async createTransaction(transaction) {
+      try {
+        const res = await api.post('/transactions', transaction)
+        await this.fetchTransactions()
+        return res.data
+      } catch (err) {
+        console.error('Error creando transacción:', err)
+        throw err
+      }
+    },
+
+    // --------------------------------------------------
+    // 🟧 PUT: Transferir inventario
+    // /api/transactions/transfer
+    // --------------------------------------------------
+    async transferInventory(transferData) {
+      try {
+        const res = await api.put('/transactions/transfer', transferData)
+        await this.fetchTransactions()
+        return res.data
+      } catch (err) {
+        console.error('Error en transferencia:', err)
+        throw err
+      }
     }
   }
 })

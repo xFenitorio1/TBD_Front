@@ -20,7 +20,7 @@
     <v-card class="mb-6" elevation="2" rounded="lg">
       <v-card-text>
         <v-row>
-          <v-col cols="12" md="3">
+          <v-col cols="6">
             <v-select
               v-model="selectedType"
               label="Tipo de Transacción"
@@ -30,19 +30,7 @@
               clearable
             />
           </v-col>
-          <v-col cols="12" md="3">
-            <v-select
-              v-model="selectedStore"
-              label="Tienda"
-              :items="stores"
-              item-title="name"
-              item-value="id"
-              variant="outlined"
-              hide-details
-              clearable
-            />
-          </v-col>
-          <v-col cols="12" md="3">
+          <v-col cols="3">
             <v-text-field
               v-model="dateRange"
               label="Rango de Fechas"
@@ -51,7 +39,7 @@
               hide-details
             />
           </v-col>
-          <v-col cols="12" md="3">
+          <v-col cols="3">
             <v-btn
               color="secondary"
               variant="outlined"
@@ -73,48 +61,38 @@
         class="elevation-0"
         hover
       >
-        <template v-slot:item.type="{ item }">
+        <template v-slot:item.typeTransaction="{ item }">
           <v-chip
-            :color="getTransactionColor(item.type)"
+            :color="getTransactionColor(item.typeTransaction)"
             size="small"
             variant="tonal"
           >
-            <v-icon start size="16">{{ getTransactionIcon(item.type) }}</v-icon>
-            {{ getTransactionTypeLabel(item.type) }}
+            <v-icon start size="16">{{ getTransactionIcon(item.typeTransaction) }}</v-icon>
+            {{ getTransactionTypeLabel(item.typeTransaction) }}
           </v-chip>
         </template>
 
-        <template v-slot:item.date="{ item }">
-          <span class="font-weight-medium">{{ formatDate(item.date) }}</span>
+        <template v-slot:item.dateTransaction="{ item }">
+          <span class="font-weight-medium">{{ formatDate(item.dateTransaction || item.date) }}</span>
         </template>
 
-        <template v-slot:item.product="{ item }">
+        <template v-slot:item.nameProduct="{ item }">
           <div class="d-flex align-center">
             <v-avatar size="24" color="primary" class="mr-2">
               <v-icon size="14" color="white">mdi-package-variant</v-icon>
             </v-avatar>
-            <span class="font-weight-medium">{{ getProductName(item.productId) }}</span>
+            <span class="font-weight-medium">{{ item.nameProduct }}</span>
           </div>
         </template>
 
-        <template v-slot:item.quantity="{ item }">
-          <span class="font-weight-bold">{{ item.quantity }}</span>
+        <template v-slot:item.amountProduct="{ item }">
+          <span class="font-weight-bold">{{ item.amountProduct }}</span>
         </template>
 
-        <template v-slot:item.amount="{ item }">
-          <span v-if="item.amount" class="font-weight-bold text-success">
-            ${{ item.amount.toFixed(2) }}
-          </span>
-          <span v-else class="text-medium-emphasis">-</span>
-        </template>
-
-        <template v-slot:item.store="{ item }">
+        <template v-slot:item.stores="{ item }">
           <div class="d-flex flex-column">
-            <span v-if="item.storeId" class="font-weight-medium">
-              {{ getStoreName(item.storeId) }}
-            </span>
-            <span v-if="item.fromStoreId && item.toStoreId" class="text-caption text-medium-emphasis">
-              {{ getStoreName(item.fromStoreId) }} → {{ getStoreName(item.toStoreId) }}
+            <span class="font-weight-medium">
+              {{ item.nameStoreOR }} → {{ item.nameStoreDE }}
             </span>
           </div>
         </template>
@@ -149,160 +127,14 @@
     </v-card>
 
     <!-- Transaction Dialog -->
-    <v-dialog v-model="transactionDialog" max-width="700px" persistent>
-      <v-card>
-        <v-card-title class="d-flex align-center">
-          <v-icon class="mr-2">{{ isEditing ? 'mdi-pencil' : 'mdi-plus' }}</v-icon>
-          {{ isEditing ? 'Editar Transacción' : 'Nueva Transacción' }}
-        </v-card-title>
-        
-        <v-card-text>
-          <v-form ref="transactionForm" v-model="isFormValid">
-            <v-row>
-              <v-col cols="12" md="6">
-                <v-select
-                  v-model="editingTransaction.type"
-                  label="Tipo de Transacción"
-                  :items="transactionTypes"
-                  variant="outlined"
-                  required
-                  :rules="[v => !!v || 'El tipo de transacción es requerido']"
-                  @update:model-value="onTypeChange"
-                />
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model="editingTransaction.date"
-                  label="Fecha"
-                  type="date"
-                  variant="outlined"
-                  required
-                  :rules="[v => !!v || 'La fecha es requerida']"
-                />
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-select
-                  v-model="editingTransaction.productId"
-                  label="Producto"
-                  :items="products"
-                  item-title="name"
-                  item-value="id"
-                  variant="outlined"
-                  required
-                  :rules="[v => !!v || 'El producto es requerido']"
-                />
-              </v-col>
-              <v-col cols="12" md="6">
-                <v-text-field
-                  v-model.number="editingTransaction.quantity"
-                  label="Cantidad"
-                  type="number"
-                  variant="outlined"
-                  required
-                  :rules="[v => v > 0 || 'La cantidad debe ser mayor que 0']"
-                  min="1"
-                />
-              </v-col>
-              
-              <!-- Store fields based on transaction type -->
-              <v-col cols="12" md="6" v-if="editingTransaction.type === 'sale'">
-                <v-select
-                  v-model="editingTransaction.storeId"
-                  label="Tienda"
-                  :items="stores"
-                  item-title="name"
-                  item-value="id"
-                  variant="outlined"
-                  required
-                  :rules="[v => !!v || 'La tienda es requerida']"
-                />
-              </v-col>
-              
-              <v-col cols="12" md="6" v-if="editingTransaction.type === 'sale'">
-                <v-text-field
-                  v-model.number="editingTransaction.amount"
-                  label="Monto Total"
-                  type="number"
-                  variant="outlined"
-                  required
-                  :rules="[v => v > 0 || 'El monto debe ser mayor que 0']"
-                  prefix="$"
-                  step="0.01"
-                />
-              </v-col>
-              
-              <v-col cols="12" md="6" v-if="editingTransaction.type === 'transfer'">
-                <v-select
-                  v-model="editingTransaction.fromStoreId"
-                  label="Desde Tienda"
-                  :items="stores"
-                  item-title="name"
-                  item-value="id"
-                  variant="outlined"
-                  required
-                  :rules="[v => !!v || 'La tienda de origen es requerida']"
-                />
-              </v-col>
-              
-              <v-col cols="12" md="6" v-if="editingTransaction.type === 'transfer'">
-                <v-select
-                  v-model="editingTransaction.toStoreId"
-                  label="Hacia Tienda"
-                  :items="stores"
-                  item-title="name"
-                  item-value="id"
-                  variant="outlined"
-                  required
-                  :rules="[v => !!v || 'La tienda de destino es requerida']"
-                />
-              </v-col>
-              
-              <v-col cols="12" md="6" v-if="editingTransaction.type === 'reception'">
-                <v-select
-                  v-model="editingTransaction.storeId"
-                  label="Tienda"
-                  :items="stores"
-                  item-title="name"
-                  item-value="id"
-                  variant="outlined"
-                  required
-                  :rules="[v => !!v || 'La tienda es requerida']"
-                />
-              </v-col>
-              
-              <v-col cols="12" md="6" v-if="editingTransaction.type === 'reception'">
-                <v-text-field
-                  v-model="editingTransaction.supplier"
-                  label="Proveedor"
-                  variant="outlined"
-                  required
-                  :rules="[v => !!v || 'El proveedor es requerido']"
-                />
-              </v-col>
-            </v-row>
-          </v-form>
-        </v-card-text>
-
-        <v-card-actions class="pa-6">
-          <v-spacer />
-          <v-btn
-            color="grey"
-            variant="text"
-            @click="closeTransactionDialog"
-          >
-            Cancelar
-          </v-btn>
-          <v-btn
-            color="primary"
-            @click="saveTransaction"
-            :loading="isSaving"
-            :disabled="!isFormValid"
-          >
-            {{ isEditing ? 'Actualizar' : 'Crear' }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <TransactionFormDialog
+      v-model="transactionDialog"
+      :transaction="editingTransaction"
+      :products="products"
+      :is-saving="isSaving"
+      @close="closeTransactionDialog"
+      @save="saveTransaction"
+    />
 
     <!-- Transaction Details Dialog -->
     <v-dialog v-model="detailsDialog" max-width="600px">
@@ -320,49 +152,50 @@
               </template>
               <v-list-item-title>Tipo</v-list-item-title>
               <v-list-item-subtitle>
-                <v-chip
-                  :color="getTransactionColor(selectedTransaction.type)"
-                  size="small"
-                  variant="tonal"
-                >
-                  {{ getTransactionTypeLabel(selectedTransaction.type) }}
+                <v-chip :color="getTransactionColor(selectedTransaction.typeTransaction)">
+                  {{ getTransactionTypeLabel(selectedTransaction.typeTransaction) }}
                 </v-chip>
               </v-list-item-subtitle>
             </v-list-item>
+
             <v-list-item>
               <template v-slot:prepend>
                 <v-icon>mdi-calendar</v-icon>
               </template>
               <v-list-item-title>Fecha</v-list-item-title>
-              <v-list-item-subtitle>{{ formatDate(selectedTransaction.date) }}</v-list-item-subtitle>
+              <v-list-item-subtitle>
+                {{ formatDate(selectedTransaction.dateTransaction) }}
+              </v-list-item-subtitle>
             </v-list-item>
+
             <v-list-item>
               <template v-slot:prepend>
                 <v-icon>mdi-package-variant</v-icon>
               </template>
               <v-list-item-title>Producto</v-list-item-title>
-              <v-list-item-subtitle>{{ getProductName(selectedTransaction.productId) }}</v-list-item-subtitle>
+              <v-list-item-subtitle>
+                {{ selectedTransaction.nameProduct }}
+              </v-list-item-subtitle>
             </v-list-item>
+
             <v-list-item>
               <template v-slot:prepend>
                 <v-icon>mdi-numeric</v-icon>
               </template>
               <v-list-item-title>Cantidad</v-list-item-title>
-              <v-list-item-subtitle>{{ selectedTransaction.quantity }}</v-list-item-subtitle>
+              <v-list-item-subtitle>
+                {{ selectedTransaction.amountProduct }}
+              </v-list-item-subtitle>
             </v-list-item>
-            <v-list-item v-if="selectedTransaction.amount">
+
+            <v-list-item>
               <template v-slot:prepend>
-                <v-icon>mdi-currency-usd</v-icon>
+                <v-icon>mdi-store</v-icon>
               </template>
-              <v-list-item-title>Monto</v-list-item-title>
-              <v-list-item-subtitle>${{ selectedTransaction.amount.toFixed(2) }}</v-list-item-subtitle>
-            </v-list-item>
-            <v-list-item v-if="selectedTransaction.supplier">
-              <template v-slot:prepend>
-                <v-icon>mdi-truck-delivery</v-icon>
-              </template>
-              <v-list-item-title>Proveedor</v-list-item-title>
-              <v-list-item-subtitle>{{ selectedTransaction.supplier }}</v-list-item-subtitle>
+              <v-list-item-title>Tiendas</v-list-item-title>
+              <v-list-item-subtitle>
+                {{ selectedTransaction.nameStoreOR }} → {{ selectedTransaction.nameStoreDE }}
+              </v-list-item-subtitle>
             </v-list-item>
           </v-list>
         </v-card-text>
@@ -385,8 +218,13 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useInventoryStore } from '../store/inventory'
+import { useTransactionStore } from '../store/transactions'
+import { useAuthStore } from '../store/auth'
+import TransactionFormDialog from '../components/transactions/TransactionFormDialog.vue'
 
 const inventoryStore = useInventoryStore()
+const transactionStore = useTransactionStore()
+const authStore = useAuthStore()
 
 // Reactive data
 const selectedType = ref(null)
@@ -394,126 +232,76 @@ const selectedStore = ref(null)
 const dateRange = ref('')
 const transactionDialog = ref(false)
 const detailsDialog = ref(false)
-const isFormValid = ref(false)
-const isEditing = ref(false)
 const isSaving = ref(false)
-const transactionForm = ref(null)
 const selectedTransaction = ref(null)
 
 // Form data
-const editingTransaction = ref({
-  type: '',
-  date: new Date().toISOString().split('T')[0],
-  productId: null,
-  quantity: 1,
-  storeId: null,
-  amount: null,
-  fromStoreId: null,
-  toStoreId: null,
-  supplier: ''
-})
+const editingTransaction = ref(null)
 
 // Table headers
 const headers = [
-  { title: 'Tipo', key: 'type', sortable: true },
-  { title: 'Fecha', key: 'date', sortable: true },
-  { title: 'Producto', key: 'product', sortable: true },
-  { title: 'Cantidad', key: 'quantity', sortable: true },
-  { title: 'Monto', key: 'amount', sortable: true },
-  { title: 'Tienda', key: 'store', sortable: true },
+  { title: 'Tipo', key: 'typeTransaction', sortable: true },
+  { title: 'Fecha', key: 'dateTransaction', sortable: true },
+  { title: 'Producto', key: 'nameProduct', sortable: true },
+  { title: 'Cantidad', key: 'amountProduct', sortable: true },
+  { title: 'Tiendas', key: 'stores', sortable: false },
   { title: 'Acciones', key: 'actions', sortable: false, width: '120px' }
 ]
 
 // Transaction types
 const transactionTypes = [
-  { title: 'Venta', value: 'sale' },
-  { title: 'Transferencia', value: 'transfer' },
-  { title: 'Recepción', value: 'reception' }
+  { title: 'Venta', value: 'Sale' },
+  { title: 'Transferencia', value: 'Transfer' },
+  { title: 'Recepción', value: 'Receipt' }
 ]
 
-// Computed properties
+// Computed properties: usa transactionStore.transactions
 const stores = computed(() => inventoryStore.stores)
 const products = computed(() => inventoryStore.products)
-const transactions = computed(() => inventoryStore.transactions)
+const transactions = computed(() => transactionStore.transactions) // <-- usa transactionStore
 
 const filteredTransactions = computed(() => {
-  let filtered = transactions.value
-  
+  let filtered = transactions.value || []
+
   if (selectedType.value) {
-    filtered = filtered.filter(t => t.type === selectedType.value)
+    filtered = filtered.filter(t => t.typeTransaction === selectedType.value)
   }
-  
+
   if (selectedStore.value) {
-    filtered = filtered.filter(t => 
-      t.storeId === selectedStore.value || 
-      t.fromStoreId === selectedStore.value || 
-      t.toStoreId === selectedStore.value
+    filtered = filtered.filter(t =>
+      t.nameStoreOR === selectedStore.value ||
+      t.nameStoreDE === selectedStore.value
     )
   }
-  
+
   return filtered
 })
 
 // Methods
 const openTransactionDialog = (transaction = null) => {
-  if (transaction) {
-    editingTransaction.value = { ...transaction }
-    isEditing.value = true
-  } else {
-    editingTransaction.value = {
-      type: '',
-      date: new Date().toISOString().split('T')[0],
-      productId: null,
-      quantity: 1,
-      storeId: null,
-      amount: null,
-      fromStoreId: null,
-      toStoreId: null,
-      supplier: ''
-    }
-    isEditing.value = false
-  }
+  editingTransaction.value = transaction ? { ...transaction } : null
   transactionDialog.value = true
 }
 
 const closeTransactionDialog = () => {
   transactionDialog.value = false
-  editingTransaction.value = {
-    type: '',
-    date: new Date().toISOString().split('T')[0],
-    productId: null,
-    quantity: 1,
-    storeId: null,
-    amount: null,
-    fromStoreId: null,
-    toStoreId: null,
-    supplier: ''
-  }
-  isEditing.value = false
+  editingTransaction.value = null
 }
 
-const onTypeChange = () => {
-  // Reset store-related fields when type changes
-  editingTransaction.value.storeId = null
-  editingTransaction.value.fromStoreId = null
-  editingTransaction.value.toStoreId = null
-  editingTransaction.value.amount = null
-  editingTransaction.value.supplier = ''
-}
-
-const saveTransaction = async () => {
-  if (!transactionForm.value.validate()) return
-  
+const saveTransaction = async (payload, transactionId) => {
   isSaving.value = true
   
   try {
-    if (isEditing.value) {
-      // Update existing transaction
+    if (transactionId != null) {
+      // TODO: implementar update si tu backend lo soporta
+      console.warn('Update transaction not yet implemented')
     } else {
-      // Create new transaction
-      inventoryStore.addTransaction(editingTransaction.value)
+      // Create transaction using the store
+      await transactionStore.createTransaction(payload)
     }
     
+    // Refresh transactions
+    await transactionStore.fetchTransactions()
     closeTransactionDialog()
   } catch (error) {
     console.error('Error saving transaction:', error)
@@ -539,6 +327,9 @@ const resetFilters = () => {
 
 const getTransactionColor = (type) => {
   const colors = {
+    Sale: 'success',
+    Transfer: 'info',
+    Receipt: 'warning',
     sale: 'success',
     transfer: 'info',
     reception: 'warning'
@@ -548,6 +339,9 @@ const getTransactionColor = (type) => {
 
 const getTransactionIcon = (type) => {
   const icons = {
+    Sale: 'mdi-cart',
+    Transfer: 'mdi-swap-horizontal',
+    Receipt: 'mdi-truck-delivery',
     sale: 'mdi-cart',
     transfer: 'mdi-swap-horizontal',
     reception: 'mdi-truck-delivery'
@@ -557,6 +351,9 @@ const getTransactionIcon = (type) => {
 
 const getTransactionTypeLabel = (type) => {
   const labels = {
+    Sale: 'Venta',
+    Transfer: 'Transferencia',
+    Receipt: 'Recepción',
     sale: 'Venta',
     transfer: 'Transferencia',
     reception: 'Recepción'
@@ -570,7 +367,8 @@ const formatDate = (date) => {
 
 const getProductName = (productId) => {
   const product = inventoryStore.getProductById(productId)
-  return product?.name || 'Producto Desconocido'
+  // usa campos reales que tienes (name o name_product)
+  return product?.name || product?.name_product || 'Producto Desconocido'
 }
 
 const getStoreName = (storeId) => {
@@ -578,11 +376,9 @@ const getStoreName = (storeId) => {
   return store?.name || 'Tienda Desconocida'
 }
 
-onMounted(() => {
-  // Initialize any component-specific data
+// Cargar datos al montar
+onMounted(async () => {
+  const storeId = authStore.user?.storeU_id
+  await transactionStore.fetchStoreTransactions(storeId)
 })
 </script>
-
-<style scoped>
-/* No custom CSS needed - using Vuetify's built-in styling */
-</style>
