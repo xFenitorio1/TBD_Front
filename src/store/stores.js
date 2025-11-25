@@ -13,6 +13,8 @@ export const useStoreStore = defineStore('stores', {
         this.loading = true
         const res = await api.get('/stores')
         this.stores = res.data
+
+        console.log("Fetched stores:", res.data)
       } catch (err) {
         console.error('Error obteniendo tiendas:', err)
         throw err

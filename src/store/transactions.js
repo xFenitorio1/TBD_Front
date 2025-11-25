@@ -15,8 +15,9 @@ export const useTransactionStore = defineStore('transactions', {
     async fetchTransactions() {
       try {
         this.loading = true
-        const res = await api.get('/api/transactions/myStoreTransactions')
+        const res = await api.get('/transactions')
         this.transactions = res.data
+        console.log("PENEPENEPNEPNEPNEPNEPNE:")
       } catch (err) {
         console.error(err)
         this.error = err
@@ -57,7 +58,7 @@ export const useTransactionStore = defineStore('transactions', {
 
     // --------------------------------------------------
     // 🟦 GET: Buscar por fecha exacta
-    // /api/transactions/searchByDate?date=2025-01-01
+    // /api/transacti ons/searchByDate?date=2025-01-01
     // --------------------------------------------------
     async fetchTransactionsByDate(date) {
       try {
@@ -89,12 +90,14 @@ export const useTransactionStore = defineStore('transactions', {
     // 🟦 GET: Transacciones por tienda según ID de usuario
     // /api/transactions/myStoreTransactions?id_user=XX
     // --------------------------------------------------
-    async fetchStoreTransactions(storeId) {
+    async fetchStoreTransactions(id_store) {
       try {
         const res = await api.get(`/transactions/myStoreTransactions`, {
-          params: { storeId }
+          params: { id_store }
+          
         })
-            this.transactions = res.data
+        console.log("Fetched store transactions:", res.data)
+        this.transactions = res.data
 
         return res.data
         
@@ -115,6 +118,7 @@ export const useTransactionStore = defineStore('transactions', {
     // --------------------------------------------------
     async createTransaction(transaction) {
       try {
+        console.log("Creating transaction with data:", transaction)
         const res = await api.post('/transactions', transaction)
         await this.fetchTransactions()
         return res.data

@@ -83,18 +83,6 @@
             >
               Iniciar Sesión
             </v-btn>
-
-            <!-- Botón de registro -->
-            <v-btn
-              color="secondary"
-              block
-              size="large"
-              variant="outlined"
-              @click="goToRegister"
-            >
-              Crear Cuenta
-            </v-btn>
-
             <v-divider class="my-4" />
 
             <div class="text-center">
@@ -104,9 +92,6 @@
               <div class="d-flex flex-column gap-1">
                 <div class="text-caption">
                   <strong>Admin:</strong> carla.diaz@valpo.com / hashedpass789
-                </div>
-                <div class="text-caption">
-                  <strong>Empleado:</strong> employee@store.com / emp123
                 </div>
               </div>
             </div>

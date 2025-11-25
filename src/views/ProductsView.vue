@@ -280,8 +280,7 @@ const deleteProduct = async () => {
         )
         console.log('✅ Entrada de inventario eliminada')
       } catch (inventoryErr) {
-        // Inventory entry might not exist, which is fine
-        
+      
         console.warn('Inventario no encontrado o ya eliminado (continuando):', inventoryErr.message)
       }
     }
@@ -303,6 +302,5 @@ const resetFilters = () => {
 </script>
 
 <style scoped>
-/* ajustes menores si quieres */
 </style>
 

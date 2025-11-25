@@ -89,10 +89,18 @@
           <span class="font-weight-bold">{{ item.amountProduct }}</span>
         </template>
 
-        <template v-slot:item.stores="{ item }">
+        <template v-slot:item.nameStoreOR="{ item }">
           <div class="d-flex flex-column">
             <span class="font-weight-medium">
-              {{ item.nameStoreOR }} → {{ item.nameStoreDE }}
+              {{ item.nameStoreOR }}
+            </span>
+          </div>
+        </template>
+
+        <template v-slot:item.nameStoreDE="{ item }">
+          <div class="d-flex flex-column">
+            <span class="font-weight-medium">
+              {{ item.nameStoreDE }}
             </span>
           </div>
         </template>
@@ -105,13 +113,6 @@
               color="info"
               variant="text"
               @click="viewTransactionDetails(item)"
-            />
-            <v-btn
-              icon="mdi-pencil"
-              size="small"
-              color="primary"
-              variant="text"
-              @click="editTransaction(item)"
             />
           </div>
         </template>
@@ -244,7 +245,8 @@ const headers = [
   { title: 'Fecha', key: 'dateTransaction', sortable: true },
   { title: 'Producto', key: 'nameProduct', sortable: true },
   { title: 'Cantidad', key: 'amountProduct', sortable: true },
-  { title: 'Tiendas', key: 'stores', sortable: false },
+  { title: 'Viene de', key: 'nameStoreOR', sortable: false },
+  { title: 'Va a', key: 'nameStoreDE', sortable: false },
   { title: 'Acciones', key: 'actions', sortable: false, width: '120px' }
 ]
 
@@ -256,7 +258,6 @@ const transactionTypes = [
 ]
 
 // Computed properties: usa transactionStore.transactions
-const stores = computed(() => inventoryStore.stores)
 const products = computed(() => inventoryStore.products)
 const transactions = computed(() => transactionStore.transactions) // <-- usa transactionStore
 
@@ -297,11 +298,12 @@ const saveTransaction = async (payload, transactionId) => {
       console.warn('Update transaction not yet implemented')
     } else {
       // Create transaction using the store
+      console.log("Saving transaction with payload:", payload)
       await transactionStore.createTransaction(payload)
     }
     
     // Refresh transactions
-    await transactionStore.fetchTransactions()
+    await transactionStore.fetchStoreTransactions(authStore.user.storeU_id)
     closeTransactionDialog()
   } catch (error) {
     console.error('Error saving transaction:', error)
@@ -365,20 +367,11 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString('es-ES')
 }
 
-const getProductName = (productId) => {
-  const product = inventoryStore.getProductById(productId)
-  // usa campos reales que tienes (name o name_product)
-  return product?.name || product?.name_product || 'Producto Desconocido'
-}
-
-const getStoreName = (storeId) => {
-  const store = inventoryStore.getStoreById(storeId)
-  return store?.name || 'Tienda Desconocida'
-}
-
 // Cargar datos al montar
 onMounted(async () => {
-  const storeId = authStore.user?.storeU_id
-  await transactionStore.fetchStoreTransactions(storeId)
+  const id_store = authStore.user?.storeU_id
+  console.log("Fetching transactions for store ID:", id_store)
+  await transactionStore.fetchStoreTransactions(id_store)
+  await inventoryStore.fetchProductsFromStore()
 })
 </script>

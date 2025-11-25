@@ -124,16 +124,7 @@
                 :rules="[v => !!v || 'La tienda es requerida']"
               />
             </v-col>
-            
-            <v-col cols="12" md="6" v-if="localTransaction.type === 'Receipt'">
-              <v-text-field
-                v-model="localTransaction.supplier"
-                label="Proveedor"
-                variant="outlined"
-                required
-                :rules="[v => !!v || 'El proveedor es requerido']"
-              />
-            </v-col>
+  
           </v-row>
         </v-form>
       </v-card-text>
@@ -153,7 +144,7 @@
           :loading="isSaving" 
           :disabled="!isFormValid"
         >
-          {{ isEditing ? 'Actualizar' : 'Crear' }}
+          {{ 'Crear' }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -163,8 +154,12 @@
 <script setup>
 import { ref, watch, computed, onMounted } from 'vue'
 import { useStoreStore } from '../../store/stores'
+import { useAuthStore } from '../../store/auth'
 
+const authStore = useAuthStore()
 const storeStore = useStoreStore()
+
+const id_store = authStore.user?.storeU_id
 
 const stores = computed(() => storeStore.stores)
 
@@ -218,7 +213,7 @@ const getStoreValue = (item) => {
 
 watch(() => props.transaction, (newTransaction) => {
   if (newTransaction) {
-    // Map backend fields to local form fields
+    
     localTransaction.value = {
       type: newTransaction.type_transaction || newTransaction.type || '',
       date: newTransaction.date_transaction 
@@ -269,21 +264,20 @@ const handleSave = async () => {
   }
 
   // Add store fields based on transaction type
-  if (localTransaction.value.type === 'Sale') {
-    payload.id_storeOR = localTransaction.value.storeId
+  if (localTransaction.value.type === 'Sale'){
+    payload.id_storeOR = id_store
     if (localTransaction.value.amount) {
       payload.amount = Number(localTransaction.value.amount)
+      payload.id_storeDE = localTransaction.value.toStoreId
     }
   } else if (localTransaction.value.type === 'Transfer') {
     payload.id_storeOR = localTransaction.value.fromStoreId
     payload.id_storeDE = localTransaction.value.toStoreId
   } else if (localTransaction.value.type === 'Receipt') {
-    payload.id_storeDE = localTransaction.value.storeId
-    if (localTransaction.value.supplier) {
-      payload.supplier = localTransaction.value.supplier
-    }
+    payload.id_storeDE = id_store
   }
 
+  console.log('Saving transaction with payload:', payload)
   emit('save', payload, props.transaction?.id_transaction)
 }
 
