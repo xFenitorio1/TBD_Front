@@ -160,37 +160,8 @@
         </v-card-title>
         <v-card-text>
           <div class="chart-container">
-            <div class="d-flex align-center justify-center" style="height: 300px;">
-              <div class="text-center">
-                <v-icon size="64" color="grey-lighten-1">mdi-chart-line</v-icon>
-                <p class="text-body-1 text-medium-emphasis mt-2">El gráfico de tendencias se implementaría aquí</p>
-                <p class="text-caption">Mostrando ventas por mes del período seleccionado</p>
-              </div>
-            </div>
-          </div>
-        </v-card-text>
-      </v-card>
-    </v-col>
-
-    <v-col cols="12" lg="4">
-      <v-card elevation="2" rounded="lg">
-        <v-card-title class="d-flex align-center">
-          <v-icon class="mr-2">mdi-chart-pie</v-icon>
-          Ventas por Categoría
-        </v-card-title>
-        <v-card-text>
-          <div class="d-flex flex-column gap-3">
-            <div v-for="(category, index) in categorySales" :key="index" class="d-flex align-center">
-              <v-avatar size="32" :color="getCategoryColor(index)" class="mr-3">
-                <span class="text-caption font-weight-bold text-white">{{ index + 1 }}</span>
-              </v-avatar>
-              <div class="flex-grow-1">
-                <div class="text-body-2 font-weight-medium">{{ category.name }}</div>
-                <div class="text-caption text-medium-emphasis">{{ category.percentage }}% del total</div>
-              </div>
-              <v-chip size="small" color="success" variant="tonal">
-                ${{ category.sales.toFixed(2) }}
-              </v-chip>
+            <div class="d-flex align-center justify-center" style="height: 300px; width: 100%;">
+              <canvas ref="salesChartCanvas"></canvas>
             </div>
           </div>
         </v-card-text>
@@ -204,22 +175,25 @@
       <v-card elevation="2" rounded="lg">
         <v-card-title class="d-flex align-center">
           <v-icon class="mr-2">mdi-store</v-icon>
-          Rendimiento por Tienda
+          Mejor proveedor del Último Mes
         </v-card-title>
         <v-card-text>
-          <div class="d-flex flex-column gap-3">
-            <div v-for="(store, index) in storePerformance" :key="store.id" class="d-flex align-center">
-              <v-avatar size="32" color="primary" class="mr-3">
-                <span class="text-caption font-weight-bold text-white">{{ index + 1 }}</span>
-              </v-avatar>
-              <div class="flex-grow-1">
-                <div class="text-body-2 font-weight-medium">{{ store.name }}</div>
-                <div class="text-caption text-medium-emphasis">{{ store.transactions }} transacciones</div>
-              </div>
-              <v-chip size="small" color="success" variant="tonal">
-                ${{ store.sales.toFixed(2) }}
-              </v-chip>
+          <div v-if="productStore.bestSupplier" class="d-flex align-center pa-4">
+            <v-avatar size="48" color="primary" class="mr-4">
+              <v-icon color="white">mdi-trophy</v-icon>
+            </v-avatar>
+            <div class="flex-grow-1">
+              <div class="text-h6 font-weight-bold">{{ productStore.bestSupplier.name_supplier }}</div>
+              <div class="text-body-2 text-medium-emphasis">Mejor Proveedor del Mes</div>
             </div>
+            <div class="text-right">
+              <div class="text-h5 font-weight-bold text-success">{{ productStore.bestSupplier.total_products_sold_last_month }}</div>
+              <div class="text-caption text-medium-emphasis">Productos Vendidos</div>
+            </div>
+          </div>
+          <div v-else class="text-center pa-6">
+            <v-icon size="64" color="grey-lighten-1">mdi-package-variant</v-icon>
+            <p class="text-body-1 text-medium-emphasis mt-2">Cargando datos del proveedor...</p>
           </div>
         </v-card-text>
       </v-card>
@@ -232,19 +206,24 @@
           Valor del Inventario por Tienda
         </v-card-title>
         <v-card-text>
-          <div class="d-flex flex-column gap-3">
-            <div v-for="(store, index) in inventoryValue" :key="store.id" class="d-flex align-center">
+          <div v-if="filteredSummary.length > 0" class="d-flex flex-column gap-3">
+            <div v-for="(store, index) in filteredSummary" :key="store.idTienda" class="d-flex align-center">
               <v-avatar size="32" color="info" class="mr-3">
                 <span class="text-caption font-weight-bold text-white">{{ index + 1 }}</span>
               </v-avatar>
               <div class="flex-grow-1">
-                <div class="text-body-2 font-weight-medium">{{ store.name }}</div>
-                <div class="text-caption text-medium-emphasis">{{ store.products }} productos</div>
+                <div class="text-body-2 font-weight-medium">{{ store.nameStore }}</div>
+                <div class="text-caption text-medium-emphasis">{{ store.uniqueProduct }} productos únicos</div>
               </div>
               <v-chip size="small" color="info" variant="tonal">
-                ${{ store.value.toFixed(2) }}
+                ${{ formatCurrency(store.totalPriceInventory) }}
               </v-chip>
             </div>
+          </div>
+          <div v-else class="text-center pa-6">
+            <v-icon size="64" color="grey-lighten-1">mdi-store-off</v-icon>
+            <p class="text-body-1 text-medium-emphasis mt-2">No hay datos de inventario disponibles</p>
+            <p class="text-caption text-medium-emphasis">para tu tienda</p>
           </div>
         </v-card-text>
       </v-card>
@@ -323,16 +302,23 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useInventoryStore } from '../store/inventory'
+import { useAuthStore } from '../store/auth'
 import { 
   generateInventoryReport, 
   generateSalesReport, 
   formatDataForExport,
   validateExportData 
 } from '../utils/exportUtils'
+import { useStoreStore } from '../store/stores'
+import { useProductStore } from '../store/product'
+import Chart from 'chart.js/auto'
 
 const inventoryStore = useInventoryStore()
+const productStore = useProductStore()
+const storeStore = useStoreStore()
+const authStore = useAuthStore()
 
 // Reactive data
 const dateRange = ref(new Date().toISOString().split('T')[0])
@@ -346,6 +332,10 @@ const exportProgress = ref({
   message: '',
   percentage: 0
 })
+
+// Chart refs
+const salesChartCanvas = ref(null)
+let salesChart = null
 
 // Table headers for alerts
 const alertHeaders = [
@@ -365,18 +355,20 @@ const periods = [
 ]
 
 // Computed properties
-const stores = computed(() => inventoryStore.stores)
-const totalProducts = computed(() => inventoryStore.products.length)
-const storeCount = computed(() => inventoryStore.stores.length)
-const lowStockCount = computed(() => inventoryStore.lowStockAlerts.length)
+const summaryStockStore = computed(() => storeStore.summaryStockStore || [])
 
-// Backend-driven state
-const totalSales = ref(0)
-const categorySales = ref([])
-const storePerformance = ref([])
-const inventoryValue = ref([])
+// Filter summary by logged-in user's id_tienda
+const filteredSummary = computed(() => {
+  const userStoreId = authStore.user?.storeU_id
+  if (!userStoreId) return []
+  
+  return summaryStockStore.value.filter(
+    (item) => Number(item.idTienda) === Number(userStoreId)
+  )
+})
 
-const criticalAlerts = computed(() => inventoryStore.lowStockAlerts)
+// Legacy computed for backward compatibility (shows all stores)
+const summary = computed(() => summaryStockStore.value)
 
 // Methods
 const showExportProgress = (type, title, message, percentage = 0) => {
@@ -451,7 +443,7 @@ const exportToExcel = async () => {
       hideExportProgress()
     }, 3000)
     
-  } catch (error) {
+    } catch (error) {
     showExportProgress('error', 'Error', 'No se pudo generar el Excel: ' + error.message)
     setTimeout(() => {
       hideExportProgress()
@@ -579,64 +571,153 @@ const getCategoryColor = (index) => {
   return colors[index % colors.length]
 }
 
+const formatCurrency = (value) => {
+  if (!value) return '0'
+  return new Intl.NumberFormat('es-CL', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(value)
+}
+
+// Mock data for demonstration (remove when real data is available)
+const totalSales = computed(() => {
+  // This should come from actual sales data
+  return 0
+})
+
+const totalProducts = computed(() => {
+  return inventoryStore.products?.length || 0
+})
+
+const lowStockCount = computed(() => {
+  return inventoryStore.lowStockAlerts?.length || 0
+})
+
+const storeCount = computed(() => {
+  return inventoryStore.stores?.length || 0
+})
+
+const stores = computed(() => {
+  return inventoryStore.stores || []
+})
+
+const categorySales = computed(() => {
+  // Mock data - replace with actual category sales
+  return []
+})
+
+const storePerformance = computed(() => {
+  // Mock data - replace with actual store performance
+  return []
+})
+
+const criticalAlerts = computed(() => {
+  return inventoryStore.lowStockAlerts || []
+})
+
+const initChart = () => {
+  if (salesChart) {
+    salesChart.destroy()
+  }
+
+  if (!salesChartCanvas.value) return
+
+  const data = productStore.avgSales || []
+  
+  const labels = data.map(item => `${item.month_name.trim()} ${item.year}`)
+  const values = data.map(item => item.average_daily_sales)
+
+  const ctx = salesChartCanvas.value.getContext('2d')
+  
+  salesChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Ventas Promedio Diarias',
+        data: values,
+        borderColor: '#1867C0', // Primary color
+        backgroundColor: 'rgba(24, 103, 192, 0.1)',
+        tension: 0.4,
+        fill: true,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: '#1867C0',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top'
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          callbacks: {
+            label: function(context) {
+              let label = context.dataset.label || '';
+              if (label) {
+                label += ': ';
+              }
+              if (context.parsed.y !== null) {
+                label += context.parsed.y.toFixed(2);
+              }
+              return label;
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: {
+            display: true,
+            color: 'rgba(0, 0, 0, 0.05)'
+          },
+          ticks: {
+            font: {
+              size: 11
+            }
+          }
+        },
+        x: {
+          grid: {
+            display: false
+          },
+          ticks: {
+            font: {
+              size: 11
+            }
+          }
+        }
+      },
+      interaction: {
+        mode: 'nearest',
+        axis: 'x',
+        intersect: false
+      }
+    }
+  })
+}
+
+// Watch for data changes to update chart
+watch(() => productStore.avgSales, () => {
+  nextTick(() => {
+    initChart()
+  })
+}, { deep: true })
+
 onMounted(async () => {
-  // Load base entities
-  await inventoryStore.refreshAll()
-  // TODO: Replace with backend analytics endpoints if available
-  // Derive metrics from loaded data as placeholders until analytics API is ready
-  totalSales.value = inventoryStore.transactions.reduce((sum, t) => sum + (t.amount || 0), 0)
-
-  // Compute category sales from products and transactions
-  const productIdToProduct = new Map(inventoryStore.products.map(p => [p.id, p]))
-  const categoryTotals = {}
-  inventoryStore.transactions.forEach(t => {
-    if (t.type === 'sale') {
-      const product = productIdToProduct.get(t.productId)
-      const category = product?.category || 'Otros'
-      const amount = t.amount || 0
-      categoryTotals[category] = (categoryTotals[category] || 0) + amount
-    }
-  })
-  const totalAmount = Object.values(categoryTotals).reduce((a, b) => a + b, 0)
-  categorySales.value = Object.entries(categoryTotals).map(([name, sales]) => ({
-    name,
-    sales,
-    percentage: totalAmount ? Math.round((sales / totalAmount) * 100) : 0
-  }))
-
-  // Store performance
-  const storeTotals = {}
-  const storeTransactions = {}
-  inventoryStore.transactions.forEach(t => {
-    const storeId = t.storeId || t.toStoreId || t.fromStoreId
-    if (!storeId) return
-    if (t.type === 'sale') {
-      storeTotals[storeId] = (storeTotals[storeId] || 0) + (t.amount || 0)
-    }
-    storeTransactions[storeId] = (storeTransactions[storeId] || 0) + 1
-  })
-  storePerformance.value = inventoryStore.stores.map(s => ({
-    id: s.id,
-    name: s.name,
-    sales: storeTotals[s.id] || 0,
-    transactions: storeTransactions[s.id] || 0
-  }))
-
-  // Inventory value by store
-  const productIdToPrice = new Map(inventoryStore.products.map(p => [p.id, p.price || 0]))
-  const byStore = {}
-  inventoryStore.inventory.forEach(i => {
-    const value = (productIdToPrice.get(i.productId) || 0) * (i.quantity || 0)
-    if (!byStore[i.storeId]) byStore[i.storeId] = { products: 0, value: 0 }
-    byStore[i.storeId].products += 1
-    byStore[i.storeId].value += value
-  })
-  inventoryValue.value = inventoryStore.stores.map(s => ({
-    id: s.id,
-    name: s.name,
-    products: byStore[s.id]?.products || 0,
-    value: byStore[s.id]?.value || 0
-  }))
+  const userStoreId = authStore.user?.storeU_id
+  await storeStore.fetchSummaryStockStore(userStoreId)
+  await productStore.fetchAverageSales()
+  await productStore.fetchBestSupplier()
+  initChart()
 })
 </script>
 

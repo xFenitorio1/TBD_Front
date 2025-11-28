@@ -65,23 +65,9 @@
       </v-col>
     </v-row>
 
-    <!-- Charts Row -->
+    <!-- Charts and Recent Activity Row -->
     <v-row class="mb-6">
-      <v-col cols="12" lg="8">
-        <v-card elevation="2" rounded="lg">
-          <v-card-title class="d-flex align-center">
-            <v-icon class="mr-2">mdi-chart-line</v-icon>
-            Tendencias de Ventas (Últimos 7 Días)
-          </v-card-title>
-          <v-card-text>
-            <div class="chart-container">
-              <canvas ref="salesChart" height="300"></canvas>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-
-      <v-col cols="12" lg="4">
+      <v-col cols="12" lg="6">
         <v-card elevation="2" rounded="lg">
           <v-card-title class="d-flex align-center">
             <v-icon class="mr-2">mdi-chart-pie</v-icon>
@@ -94,10 +80,7 @@
           </v-card-text>
         </v-card>
       </v-col>
-    </v-row>
 
-    <!-- Recent Activity and Low Stock -->
-    <v-row>
       <v-col cols="12" lg="6">
         <v-card elevation="2" rounded="lg">
           <v-card-title class="d-flex align-center">
@@ -127,36 +110,6 @@
           </v-card-text>
         </v-card>
       </v-col>
-
-      <v-col cols="12" lg="6">
-        <v-card elevation="2" rounded="lg">
-          <v-card-title class="d-flex align-center">
-            <v-icon class="mr-2" color="warning">mdi-alert</v-icon>
-            Alertas de Stock Bajo
-          </v-card-title>
-          <v-card-text>
-            <v-list lines="two">
-              <v-list-item
-                v-for="alert in lowStockAlerts.slice(0, 5)"
-                :key="alert.id"
-                :prepend-icon="'mdi-package-variant'"
-                :title="getProductById(alert.productId)?.name"
-                :subtitle="`${alert.quantity} restantes (Mín: ${alert.minStock})`"
-              >
-                <template v-slot:append>
-                  <v-chip
-                    color="error"
-                    size="small"
-                    variant="tonal"
-                  >
-                    Stock Bajo
-                  </v-chip>
-                </template>
-              </v-list-item>
-            </v-list>
-          </v-card-text>
-        </v-card>
-      </v-col>
     </v-row>
   </v-container>
 </template>
@@ -166,156 +119,118 @@ import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { Chart, registerables } from 'chart.js'
 import { useAuthStore } from '../store/auth'
 import { useInventoryStore } from '../store/inventory'
+import { useProductStore } from '../store/product'
+import { useStoreStore } from '../store/stores'
+import { useTransactionStore } from '../store/transactions'
 
 // Register Chart.js components
 Chart.register(...registerables)
 
+const storesStore = useStoreStore()
+const productStore = useProductStore()
 const authStore = useAuthStore()
 const inventoryStore = useInventoryStore()
+const transactionStore = useTransactionStore()
 
 // Chart references
-const salesChart = ref(null)
 const topProductsChart = ref(null)
 
 // Chart instances
-let salesChartInstance = null
 let topProductsChartInstance = null
 
 const user = authStore.user
 const totalProducts = inventoryStore.totalProducts
 const totalStores = inventoryStore.totalStores
 const lowStockAlerts = inventoryStore.lowStockAlerts
+const summaryStock = computed(() => storesStore.summaryStock)
 
-// Mock data for charts and analytics
-const topProducts = computed(() => [
-  { id: 1, name: 'Laptop Dell XPS 13', sku: 'LAP001', sales: 15 },
-  { id: 2, name: 'Mouse Inalámbrico', sku: 'MOU001', sales: 12 },
-  { id: 3, name: 'Teclado Mecánico', sku: 'KEY001', sales: 8 },
-  { id: 4, name: 'Monitor 27"', sku: 'MON001', sales: 6 },
-  { id: 5, name: 'Cable USB-C', sku: 'CAB001', sales: 25 }
-])
+// Real data for charts and analytics
+const topProducts = computed(() => {
+  const allProducts = productStore.top5 || []
+  const id_store = authStore.user?.storeU_id
+  
+  let filtered = []
+  
+  if (id_store) {
+    // Filter by store
+    filtered = allProducts.filter(p => p.id_store === id_store)
+  } else {
+    // If no store (e.g. admin viewing all), we might want to aggregate or show all.
+    // For now, let's aggregate by product name to show global top 5
+    const aggregation = {}
+    allProducts.forEach(p => {
+      if (!aggregation[p.top_5_product]) {
+        aggregation[p.top_5_product] = 0
+      }
+      aggregation[p.top_5_product] += p.quantity_sold
+    })
+    
+    filtered = Object.keys(aggregation).map(name => ({
+      top_5_product: name,
+      quantity_sold: aggregation[name]
+    }))
+  }
 
-const recentTransactions = computed(() => inventoryStore.transactions)
+  // Sort by quantity sold desc and take top 5
+  return filtered
+    .sort((a, b) => b.quantity_sold - a.quantity_sold)
+    .slice(0, 5)
+    .map((p, index) => ({
+      id: index, // No ID in the aggregation/view, using index
+      name: p.top_5_product,
+      sales: p.quantity_sold
+    }))
+})
+
+const recentTransactions = ref([])
 
 const getProductById = (id) => inventoryStore.getProductById(id)
 
 const getTransactionIcon = (type) => {
   const icons = {
-    sale: 'mdi-cart',
-    transfer: 'mdi-swap-horizontal',
-    reception: 'mdi-truck-delivery'
+    'Sale': 'mdi-cart',
+    'Transfer': 'mdi-swap-horizontal',
+    'Receipt': 'mdi-truck-delivery',
+    'sale': 'mdi-cart',
+    'transfer': 'mdi-swap-horizontal',
+    'reception': 'mdi-truck-delivery'
   }
   return icons[type] || 'mdi-help'
 }
 
 const getTransactionTitle = (transaction) => {
-  const product = getProductById(transaction.productId)
+  if (transaction.productName) return transaction.productName
+  
+  // The backend returns id_product, so we use that to look up the product
+  const product = getProductById(transaction.id_product || transaction.productId)
   return `${product?.name || 'Producto Desconocido'}`
 }
 
 const getTransactionTypeLabel = (type) => {
   const labels = {
-    sale: 'Venta',
-    transfer: 'Transferencia',
-    reception: 'Recepción'
+    'Sale': 'Venta',
+    'Transfer': 'Transferencia',
+    'Receipt': 'Recepción',
+    'sale': 'Venta',
+    'transfer': 'Transferencia',
+    'reception': 'Recepción'
   }
   return labels[type] || type
 }
 
 const getTransactionColor = (type) => {
   const colors = {
-    sale: 'success',
-    transfer: 'info',
-    reception: 'warning'
+    'Sale': 'success',
+    'Transfer': 'info',
+    'Receipt': 'warning',
+    'sale': 'success',
+    'transfer': 'info',
+    'reception': 'warning'
   }
   return colors[type] || 'default'
 }
 
 // Chart initialization methods
-const initSalesChart = () => {
-  if (salesChartInstance) {
-    salesChartInstance.destroy()
-  }
-
-  const ctx = salesChart.value.getContext('2d')
-  
-  // Mock sales data for the last 7 days
-  const salesData = {
-    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
-    datasets: [{
-      label: 'Ventas ($)',
-      data: [1250, 1890, 2100, 1680, 2340, 1890, 1560],
-      borderColor: '#1976D2',
-      backgroundColor: 'rgba(25, 118, 210, 0.1)',
-      borderWidth: 3,
-      fill: true,
-      tension: 0.4,
-      pointBackgroundColor: '#1976D2',
-      pointBorderColor: '#ffffff',
-      pointBorderWidth: 2,
-      pointRadius: 6,
-      pointHoverRadius: 8
-    }]
-  }
-
-  salesChartInstance = new Chart(ctx, {
-    type: 'line',
-    data: salesData,
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false
-        },
-        tooltip: {
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          titleColor: '#ffffff',
-          bodyColor: '#ffffff',
-          borderColor: '#1976D2',
-          borderWidth: 1,
-          cornerRadius: 8,
-          displayColors: false
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          grid: {
-            color: 'rgba(0, 0, 0, 0.1)',
-            drawBorder: false
-          },
-          ticks: {
-            color: '#666666',
-            font: {
-              size: 12
-            },
-            callback: function(value) {
-              return '$' + value.toLocaleString()
-            }
-          }
-        },
-        x: {
-          grid: {
-            display: false
-          },
-          ticks: {
-            color: '#666666',
-            font: {
-              size: 12
-            }
-          }
-        }
-      },
-      elements: {
-        point: {
-          hoverBackgroundColor: '#1976D2'
-        }
-      }
-    }
-  })
-}
-
 const initTopProductsChart = () => {
   if (topProductsChartInstance) {
     topProductsChartInstance.destroy()
@@ -324,7 +239,7 @@ const initTopProductsChart = () => {
   const ctx = topProductsChart.value.getContext('2d')
   
   const chartData = {
-    labels: topProducts.value.map(p => p.name.substring(0, 15) + '...'),
+    labels: topProducts.value.map(p => p.name.substring(0, 15) + (p.name.length > 15 ? '...' : '')),
     datasets: [{
       data: topProducts.value.map(p => p.sales),
       backgroundColor: [
@@ -376,7 +291,7 @@ const initTopProductsChart = () => {
               const label = context.label || ''
               const value = context.parsed
               const total = context.dataset.data.reduce((a, b) => a + b, 0)
-              const percentage = ((value / total) * 100).toFixed(1)
+              const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0
               return `${label}: ${value} vendidos (${percentage}%)`
             }
           }
@@ -389,16 +304,58 @@ const initTopProductsChart = () => {
 
 // Initialize charts when component is mounted
 onMounted(async () => {
+  const id_store = authStore.user?.storeU_id
   await nextTick()
-  initSalesChart()
+  
+  // Load data first
+  await productStore.fetchTop5()
+  await productStore.fetchLowStock()
+  await productStore.fetchAverageSales()
+  await storesStore.fetchSummaryStockStore(id_store)
+  await productStore.fetchAverageInventory()
+  await productStore.fetchNoMovements()
+  await productStore.fetchBestSupplier()
+  
+  // Then init charts with the loaded data
   initTopProductsChart()
+  
+  // Ensure products are loaded so we can look up names
+  await inventoryStore.fetchProductsFromStore()
+  
+  // Fetch recent transactions and map them
+  try {
+    let transactions = []
+    if (id_store) {
+      transactions = await transactionStore.fetchStoreTransactions(id_store)
+    } else {
+      transactions = await transactionStore.recentTransactions()
+    }
+
+    if (Array.isArray(transactions)) {
+      // Sort by date descending (newest first)
+      transactions.sort((a, b) => {
+        const dateA = new Date(a.date_transaction || a.dateTransaction)
+        const dateB = new Date(b.date_transaction || b.dateTransaction)
+        return dateB - dateA
+      })
+
+      recentTransactions.value = transactions.map(t => ({
+        id: t.id_transaction || t.idTransaction,
+        type: t.type_transaction || t.typeTransaction,
+        date: t.date_transaction || t.dateTransaction,
+        quantity: t.amount_product || t.amountProduct,
+        productId: t.id_product || t.idProduct,
+        productName: t.nameProduct, // Some endpoints might return the name directly
+        ...t
+      }))
+    }
+  } catch (error) {
+    console.error("Error fetching recent transactions:", error)
+  }
 })
 
 // Clean up charts when component is unmounted
 onUnmounted(() => {
-  if (salesChartInstance) {
-    salesChartInstance.destroy()
-  }
   if (topProductsChartInstance) {
     topProductsChartInstance.destroy()
   }

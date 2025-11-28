@@ -27,7 +27,7 @@ export const useRoleUtils = () => {
   }
 
   const roles = [
-    { title: 'Administrador', value: 'ADMINISTRATOR' },
+    { title: 'Administrador', value: 'SUPERADMINISTRATOR' },
     { title: 'Empleado', value: 'EMPLOYEE' }
   ]
 
@@ -38,5 +38,8 @@ export const useRoleUtils = () => {
     roles
   }
 }
+
+
+
 
 

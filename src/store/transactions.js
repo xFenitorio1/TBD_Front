@@ -79,6 +79,7 @@ export const useTransactionStore = defineStore('transactions', {
     async getUnusualTransactions() {
       try {
         const res = await api.get('/transactions/unusual')
+        console.log("Fetched unusual transactions:", res.data)
         return res.data
       } catch (err) {
         console.error('Error buscando transacciones inusuales:', err)
@@ -118,10 +119,18 @@ export const useTransactionStore = defineStore('transactions', {
     // --------------------------------------------------
     async createTransaction(transaction) {
       try {
+        let res
         console.log("Creating transaction with data:", transaction)
-        const res = await api.post('/transactions', transaction)
+
+        if (transaction.type_transaction === 'Transfer') {
+          res = await api.put('/transactions/transfer', transaction)
+        } else {
+          res = await api.post('/transactions', transaction)
+        }
+
         await this.fetchTransactions()
         return res.data
+
       } catch (err) {
         console.error('Error creando transacción:', err)
         throw err
@@ -136,9 +145,21 @@ export const useTransactionStore = defineStore('transactions', {
       try {
         const res = await api.put('/transactions/transfer', transferData)
         await this.fetchTransactions()
+        console.log("Transferencia realizada:", res.data)
         return res.data
       } catch (err) {
         console.error('Error en transferencia:', err)
+        throw err
+      }
+    },
+    
+    async recentTransactions(){
+      try {
+        const res = await api.get('/transactions/recentTransactions')
+        console.log("Recent transactions fetched:", res.data)
+        return res.data
+      } catch (err){
+        console.error('Error fetching recent transactions:', err)
         throw err
       }
     }

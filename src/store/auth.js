@@ -8,7 +8,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!user.value)
   const isAdmin = computed(() => {
   const role = user.value?.role?.toUpperCase()
-  return role === 'ADMINISTRATOR' || role === 'ROLE_ADMINISTRATOR'
+  return role === 'SUPERADMINISTRATOR' || role === 'ROLE_SUPERADMINISTRATOR'
 })
   const router = useRouter()
 

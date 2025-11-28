@@ -72,19 +72,7 @@
                 :rules="[v => !!v || 'La tienda es requerida']"
               />
             </v-col>
-            
-            <v-col cols="12" md="6" v-if="localTransaction.type === 'Sale'">
-              <v-text-field
-                v-model.number="localTransaction.amount"
-                label="Monto Total"
-                type="number"
-                variant="outlined"
-                required
-                :rules="[v => v > 0 || 'El monto debe ser mayor que 0']"
-                prefix="$"
-                step="0.01"
-              />
-            </v-col>
+
             
             <v-col cols="12" md="6" v-if="localTransaction.type === 'Transfer'">
               <v-select
@@ -194,7 +182,7 @@ const localTransaction = ref({
   supplier: ''
 })
 
-// Helper functions to get item titles and values
+
 const getProductTitle = (item) => {
   return item.name_product || item.name || 'Producto Desconocido'
 }
@@ -243,7 +231,7 @@ watch(() => props.transaction, (newTransaction) => {
 }, { immediate: true })
 
 const onTypeChange = () => {
-  // Reset fields when type changes
+  
   localTransaction.value.storeId = null
   localTransaction.value.fromStoreId = null
   localTransaction.value.toStoreId = null
@@ -255,15 +243,13 @@ const handleSave = async () => {
   const valid = await transactionForm.value?.validate()
   if (!valid) return
 
-  // Map local form fields to backend API format
   const payload = {
     type_transaction: localTransaction.value.type,
     date_transaction: localTransaction.value.date,
-    amount_product: Number(localTransaction.value.quantity),
+    quantity: Number(localTransaction.value.quantity),
     id_product: localTransaction.value.productId
   }
 
-  // Add store fields based on transaction type
   if (localTransaction.value.type === 'Sale'){
     payload.id_storeOR = id_store
     if (localTransaction.value.amount) {
@@ -281,14 +267,14 @@ const handleSave = async () => {
   emit('save', payload, props.transaction?.id_transaction)
 }
 
-// Load stores when component mounts
+
 onMounted(async () => {
   if (stores.value.length === 0) {
     await storeStore.fetchStores()
   }
 })
 
-// Also load stores when dialog opens
+
 watch(() => props.modelValue, async (isOpen) => {
   if (isOpen && stores.value.length === 0) {
     await storeStore.fetchStores()

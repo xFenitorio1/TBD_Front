@@ -127,6 +127,37 @@
       </v-data-table>
     </v-card>
 
+    <v-divider class="my-6" />
+
+    <!-- Unusual Transactions Table -->
+    <v-card elevation="2" rounded="lg" class="mb-6">
+      <v-card-title class="d-flex align-center">
+        <v-icon color="warning" class="mr-2">mdi-alert-circle-outline</v-icon>
+        Transacciones Inusuales
+      </v-card-title>
+      <v-card-subtitle class="mb-2">
+        Movimientos de inventario con volumen sospechoso
+      </v-card-subtitle>
+      <v-data-table
+        :headers="unusualHeaders"
+        :items="filteredUnusualTransactions"
+        class="elevation-0"
+        hover
+      >
+        <template v-slot:item.amount_product="{ item }">
+          <v-chip color="warning" variant="tonal" size="small">
+            {{ item.amount_product }} unidades
+          </v-chip>
+        </template>
+        
+        <template v-slot:no-data>
+          <div class="text-center pa-4">
+            <p class="text-body-2 text-medium-emphasis">No se detectaron transacciones inusuales</p>
+          </div>
+        </template>
+      </v-data-table>
+    </v-card>
+
     <!-- Transaction Dialog -->
     <TransactionFormDialog
       v-model="transactionDialog"
@@ -235,6 +266,7 @@ const transactionDialog = ref(false)
 const detailsDialog = ref(false)
 const isSaving = ref(false)
 const selectedTransaction = ref(null)
+const unusualTransactions = ref([])
 
 // Form data
 const editingTransaction = ref(null)
@@ -248,6 +280,12 @@ const headers = [
   { title: 'Viene de', key: 'nameStoreOR', sortable: false },
   { title: 'Va a', key: 'nameStoreDE', sortable: false },
   { title: 'Acciones', key: 'actions', sortable: false, width: '120px' }
+]
+
+const unusualHeaders = [
+  { title: 'Tienda', key: 'store_name', sortable: true },
+  { title: 'Producto', key: 'product_name', sortable: true },
+  { title: 'Cantidad', key: 'amount_product', sortable: true, align: 'end' }
 ]
 
 // Transaction types
@@ -276,6 +314,14 @@ const filteredTransactions = computed(() => {
   }
 
   return filtered
+})
+
+const filteredUnusualTransactions = computed(() => {
+  const id_store = authStore.user?.storeU_id
+  if (id_store) {
+    return unusualTransactions.value.filter(t => t.id_store === id_store)
+  }
+  return unusualTransactions.value
 })
 
 // Methods
@@ -373,5 +419,7 @@ onMounted(async () => {
   console.log("Fetching transactions for store ID:", id_store)
   await transactionStore.fetchStoreTransactions(id_store)
   await inventoryStore.fetchProductsFromStore()
+  const unusual = await transactionStore.getUnusualTransactions()
+  unusualTransactions.value = unusual || []
 })
 </script>
