@@ -1,33 +1,34 @@
 export const useRoleUtils = () => {
   const getRoleColor = (role) => {
     const colors = {
-      admin: 'error',
-      manager: 'warning',
-      employee: 'info'
+      SUPERADMINISTRATOR: 'purple-darken-2',
+      ADMINISTRATOR: 'primary',
+      EMPLOYEE: 'warning'
     }
     return colors[role] || 'default'
   }
 
   const getRoleIcon = (role) => {
     const icons = {
-      admin: 'mdi-shield-crown',
-      manager: 'mdi-account-tie',
-      employee: 'mdi-account'
+      SUPERADMINISTRATOR: 'mdi-shield-crown',
+      ADMINISTRATOR: 'mdi-shield-account',
+      EMPLOYEE: 'mdi-account'
     }
     return icons[role] || 'mdi-help'
   }
 
   const getRoleLabel = (role) => {
     const labels = {
-      admin: 'Administrador',
-      manager: 'Gerente',
-      employee: 'Empleado'
+      SUPERADMINISTRATOR: 'Super Admin',
+      ADMINISTRATOR: 'Administrador',
+      EMPLOYEE: 'Empleado'
     }
     return labels[role] || role
   }
 
   const roles = [
-    { title: 'Administrador', value: 'SUPERADMINISTRATOR' },
+    { title: 'Super Admin', value: 'SUPERADMINISTRATOR' },
+    { title: 'Administrador', value: 'ADMINISTRATOR' },
     { title: 'Empleado', value: 'EMPLOYEE' }
   ]
 

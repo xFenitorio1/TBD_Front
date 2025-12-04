@@ -12,7 +12,7 @@
     <v-card class="mb-6" elevation="2" rounded="lg">
       <v-card-text>
         <v-row>
-          <v-col cols="12" md="5">
+          <v-col cols="12" md="9">
             <v-text-field
               v-model="searchQuery"
               label="Buscar productos"
@@ -21,16 +21,6 @@
               variant="outlined"
               clearable
               hide-details
-            />
-          </v-col>
-          <v-col cols="12" md="4">
-            <v-select
-              v-model="selectedStatus"
-              label="Estado del Stock"
-              :items="stockStatuses"
-              variant="outlined"
-              hide-details
-              clearable
             />
           </v-col>
           <v-col cols="12" md="3">

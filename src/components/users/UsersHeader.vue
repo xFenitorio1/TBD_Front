@@ -8,6 +8,9 @@
       color="primary"
       prepend-icon="mdi-plus"
       size="large"
+      variant="outlined"
+      rounded="pill"
+      class="text-none font-weight-bold px-6"
       @click="$emit('add-user')"
     >
       Agregar Usuario

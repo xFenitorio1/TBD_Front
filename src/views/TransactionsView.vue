@@ -8,8 +8,11 @@
       </div>
       <v-btn
         color="primary"
-        prepend-icon="mdi-plus"
+        variant="outlined"
         size="large"
+        rounded="pill"
+        prepend-icon="mdi-plus"
+        class="text-none font-weight-bold px-6"
         @click="openTransactionDialog()"
       >
         Nueva Transacción
@@ -20,7 +23,7 @@
     <v-card class="mb-6" elevation="2" rounded="lg">
       <v-card-text>
         <v-row>
-          <v-col cols="6">
+          <v-col cols="9">
             <v-select
               v-model="selectedType"
               label="Tipo de Transacción"
@@ -28,15 +31,6 @@
               variant="outlined"
               hide-details
               clearable
-            />
-          </v-col>
-          <v-col cols="3">
-            <v-text-field
-              v-model="dateRange"
-              label="Rango de Fechas"
-              type="date"
-              variant="outlined"
-              hide-details
             />
           </v-col>
           <v-col cols="3">
@@ -125,7 +119,7 @@
           </div>
         </template>
       </v-data-table>
-    </v-card>
+    </v-card> 
 
     <v-divider class="my-6" />
 
@@ -136,7 +130,7 @@
         Transacciones Inusuales
       </v-card-title>
       <v-card-subtitle class="mb-2">
-        Movimientos de inventario con volumen sospechoso
+        Movimientos de inventario con volumen alto
       </v-card-subtitle>
       <v-data-table
         :headers="unusualHeaders"
@@ -252,11 +246,13 @@ import { ref, computed, onMounted } from 'vue'
 import { useInventoryStore } from '../store/inventory'
 import { useTransactionStore } from '../store/transactions'
 import { useAuthStore } from '../store/auth'
+import { useUiStore } from '../store/ui'
 import TransactionFormDialog from '../components/transactions/TransactionFormDialog.vue'
 
 const inventoryStore = useInventoryStore()
 const transactionStore = useTransactionStore()
 const authStore = useAuthStore()
+const uiStore = useUiStore()
 
 // Reactive data
 const selectedType = ref(null)
@@ -350,6 +346,9 @@ const saveTransaction = async (payload, transactionId) => {
     
     // Refresh transactions
     await transactionStore.fetchStoreTransactions(authStore.user.storeU_id)
+    
+    uiStore.showSnackbar('Transacción creada exitosamente', 'success')
+    
     closeTransactionDialog()
   } catch (error) {
     console.error('Error saving transaction:', error)

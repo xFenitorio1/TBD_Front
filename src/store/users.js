@@ -15,7 +15,9 @@ export const useUserStore = defineStore('userStore', {
       this.loading = true
       try {
         const res = await api.get('/user')
+
         this.users = res.data
+        console.log("Users: ", this.users)
       } catch (err) {
         console.error('Error obteniendo usuarios:', err)
         this.error = err
@@ -41,12 +43,27 @@ export const useUserStore = defineStore('userStore', {
       }
     },
 
+    async fetchUserByStoreId(store_id) {
+      this.loading = true
+      try {
+        const res = await api.get(`/user/UsersByStore/${store_id}`)
+        this.users = res.data
+        console.log("Users: ", this.users)
+      } catch (err) {
+        console.error('Error obteniendo usuarios por tienda:', err)
+        this.error = err
+        throw err
+      } finally {
+        this.loading = false
+      }
+    },
+
     // Actualizar usuario
     async updateUser(user) {
       this.loading = true
       try {
         const res = await api.put('/user/update', user)
-        return res.data    
+        return res.data
       } catch (err) {
         console.error('Error actualizando usuario:', err)
         this.error = err

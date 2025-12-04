@@ -50,22 +50,37 @@ export const generatePDFReport = (data, options = {}) => {
 
 // Excel Export Functions
 export const generateExcelReport = (data, options = {}) => {
-  // This function would use SheetJS to generate Excel reports
-  // You'll need to install: npm install xlsx
-  
   const defaultOptions = {
     filename: 'inventory-report.xlsx',
     sheetName: 'Reporte',
     ...options
   }
 
-  // Example implementation structure:
-  // const workbook = XLSX.utils.book_new()
-  // const worksheet = XLSX.utils.json_to_sheet(data)
-  // XLSX.utils.book_append_sheet(workbook, worksheet, defaultOptions.sheetName)
-  // XLSX.writeFile(workbook, defaultOptions.filename)
-  
-  console.log('Excel generation would happen here with:', { data, options: defaultOptions })
+  const workbook = XLSX.utils.book_new()
+
+  // If data is an object with multiple sheets
+  if (typeof data === 'object' && !Array.isArray(data)) {
+    Object.keys(data).forEach(key => {
+      if (Array.isArray(data[key]) && data[key].length > 0) {
+        const worksheet = XLSX.utils.json_to_sheet(data[key])
+        XLSX.utils.book_append_sheet(workbook, worksheet, key.substring(0, 31))
+      } else if (typeof data[key] === 'object' && data[key] !== null && !Array.isArray(data[key])) {
+        // Convert object to array of key-value pairs
+        const objArray = Object.keys(data[key]).map(k => ({
+          Campo: k,
+          Valor: data[key][k]
+        }))
+        const worksheet = XLSX.utils.json_to_sheet(objArray)
+        XLSX.utils.book_append_sheet(workbook, worksheet, key.substring(0, 31))
+      }
+    })
+  } else if (Array.isArray(data)) {
+    // Single sheet from array
+    const worksheet = XLSX.utils.json_to_sheet(data)
+    XLSX.utils.book_append_sheet(workbook, worksheet, defaultOptions.sheetName)
+  }
+
+  XLSX.writeFile(workbook, defaultOptions.filename)
   return { success: true, filename: defaultOptions.filename }
 }
 
@@ -83,11 +98,11 @@ export const generateCSVReport = (data, options = {}) => {
 
   // Get headers from first object
   const headers = Object.keys(data[0])
-  
+
   // Create CSV content
   const csvContent = [
     headers.join(defaultOptions.delimiter),
-    ...data.map(row => 
+    ...data.map(row =>
       headers.map(header => {
         const value = row[header]
         // Handle values that need quotes (contain commas, quotes, or newlines)
@@ -102,7 +117,7 @@ export const generateCSVReport = (data, options = {}) => {
   // Create and download file
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
   const link = document.createElement('a')
-  
+
   if (link.download !== undefined) {
     const url = URL.createObjectURL(blob)
     link.setAttribute('href', url)
@@ -170,14 +185,14 @@ export const formatDataForExport = (data, type = 'table') => {
         })
         return formatted
       })
-    
+
     case 'summary':
       return {
         generatedAt: new Date().toISOString(),
         totalRecords: data.length,
         data: data
       }
-    
+
     default:
       return data
   }
@@ -193,15 +208,194 @@ export const validateExportData = (data) => {
   if (!data) {
     throw new Error('No data provided for export')
   }
-  
+
   if (Array.isArray(data) && data.length === 0) {
     throw new Error('Data array is empty')
   }
-  
+
   if (typeof data === 'object' && Object.keys(data).length === 0) {
     throw new Error('Data object is empty')
   }
-  
+
   return true
 }
 
+// Comprehensive Reports Export Function
+export const generateComprehensiveReport = (reportData, options = {}) => {
+  const defaultOptions = {
+    title: 'Reporte Completo de Análisis',
+    filename: 'reporte-completo',
+    ...options
+  }
+
+  const formattedData = {
+    'Resumen': [
+      { Métrica: 'Ventas Totales', Valor: reportData.summary?.totalSales || 0 },
+      { Métrica: 'Total de Productos', Valor: reportData.summary?.totalProducts || 0 },
+      { Métrica: 'Productos con Stock Bajo', Valor: reportData.summary?.lowStockCount || 0 },
+      { Métrica: 'Tiendas Activas', Valor: reportData.summary?.storeCount || 0 }
+    ],
+    'Ventas Mensuales': reportData.monthlySales || [],
+    'Mejor Proveedor': reportData.bestSupplier ? [reportData.bestSupplier] : [],
+    'Valor Inventario': reportData.inventoryValue || [],
+    'Promedio Días Inventario': reportData.avgInventory || []
+  }
+
+  return {
+    pdf: () => {
+      const doc = new jsPDF('portrait', 'mm', 'a4')
+      let yPosition = 20
+
+      // Title
+      doc.setFontSize(18)
+      doc.setFont(undefined, 'bold')
+      doc.text(defaultOptions.title, 14, yPosition)
+      yPosition += 10
+
+      // Date
+      doc.setFontSize(10)
+      doc.setFont(undefined, 'normal')
+      doc.text(`Fecha: ${new Date().toLocaleDateString('es-CL')}`, 14, yPosition)
+      yPosition += 10
+
+      // Summary Section
+      if (formattedData.Resumen.length > 0) {
+        doc.setFontSize(14)
+        doc.setFont(undefined, 'bold')
+        doc.text('Resumen General', 14, yPosition)
+        yPosition += 7
+
+        autoTable(doc, {
+          startY: yPosition,
+          head: [['Métrica', 'Valor']],
+          body: formattedData.Resumen.map(item => [item.Métrica, item.Valor]),
+          theme: 'grid',
+          headStyles: { fillColor: [24, 103, 192] }
+        })
+        yPosition = doc.lastAutoTable.finalY + 10
+      }
+
+      // Monthly Sales Section
+      if (formattedData['Ventas Mensuales'].length > 0) {
+        if (yPosition > 250) {
+          doc.addPage()
+          yPosition = 20
+        }
+
+        doc.setFontSize(14)
+        doc.setFont(undefined, 'bold')
+        doc.text('Tendencias de Ventas Mensuales', 14, yPosition)
+        yPosition += 7
+
+        autoTable(doc, {
+          startY: yPosition,
+          head: [['Mes', 'Año', 'Ventas Promedio Diarias', 'Diferencia Mes Anterior']],
+          body: formattedData['Ventas Mensuales'].map(item => [
+            item.month_name?.trim() || '',
+            item.year || '',
+            item.average_daily_sales || 0,
+            item.difference_from_previous_month || 0
+          ]),
+          theme: 'grid',
+          headStyles: { fillColor: [24, 103, 192] }
+        })
+        yPosition = doc.lastAutoTable.finalY + 10
+      }
+
+      // Best Supplier Section
+      if (formattedData['Mejor Proveedor'].length > 0) {
+        if (yPosition > 250) {
+          doc.addPage()
+          yPosition = 20
+        }
+
+        doc.setFontSize(14)
+        doc.setFont(undefined, 'bold')
+        doc.text('Mejor Proveedor del Último Mes', 14, yPosition)
+        yPosition += 7
+
+        autoTable(doc, {
+          startY: yPosition,
+          head: [['Proveedor', 'Productos Vendidos']],
+          body: formattedData['Mejor Proveedor'].map(item => [
+            item.name_supplier || '',
+            item.total_products_sold_last_month || 0
+          ]),
+          theme: 'grid',
+          headStyles: { fillColor: [24, 103, 192] }
+        })
+        yPosition = doc.lastAutoTable.finalY + 10
+      }
+
+      // Inventory Value Section
+      if (formattedData['Valor Inventario'].length > 0) {
+        if (yPosition > 250) {
+          doc.addPage()
+          yPosition = 20
+        }
+
+        doc.setFontSize(14)
+        doc.setFont(undefined, 'bold')
+        doc.text('Valor del Inventario por Tienda', 14, yPosition)
+        yPosition += 7
+
+        autoTable(doc, {
+          startY: yPosition,
+          head: [['Tienda', 'Productos Únicos', 'Valor Total']],
+          body: formattedData['Valor Inventario'].map(item => [
+            item.nameStore || '',
+            item.uniqueProduct || 0,
+            `$${new Intl.NumberFormat('es-CL').format(item.totalPriceInventory || 0)}`
+          ]),
+          theme: 'grid',
+          headStyles: { fillColor: [24, 103, 192] }
+        })
+        yPosition = doc.lastAutoTable.finalY + 10
+      }
+
+      // Average Days in Inventory Section
+      if (formattedData['Promedio Días Inventario'].length > 0) {
+        if (yPosition > 250) {
+          doc.addPage()
+          yPosition = 20
+        }
+
+        doc.setFontSize(14)
+        doc.setFont(undefined, 'bold')
+        doc.text('Promedio de Días en Inventario', 14, yPosition)
+        yPosition += 7
+
+        autoTable(doc, {
+          startY: yPosition,
+          head: [['Producto', 'Días Promedio']],
+          body: formattedData['Promedio Días Inventario'].map(item => [
+            item.name_product || '',
+            item.average_days || 0
+          ]),
+          theme: 'grid',
+          headStyles: { fillColor: [24, 103, 192] }
+        })
+      }
+
+      doc.save(`${defaultOptions.filename}.pdf`)
+      return { success: true, filename: `${defaultOptions.filename}.pdf` }
+    },
+    excel: () => generateExcelReport(formattedData, { filename: `${defaultOptions.filename}.xlsx` }),
+    csv: () => {
+      // For CSV, combine all data into one sheet with section headers
+      const combinedData = []
+
+      Object.keys(formattedData).forEach(section => {
+        combinedData.push({ Sección: section })
+        if (Array.isArray(formattedData[section])) {
+          formattedData[section].forEach(item => {
+            combinedData.push(item)
+          })
+        }
+        combinedData.push({}) // Empty row between sections
+      })
+
+      return generateCSVReport(combinedData, { filename: `${defaultOptions.filename}.csv` })
+    }
+  }
+}

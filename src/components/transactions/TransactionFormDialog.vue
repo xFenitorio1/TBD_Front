@@ -246,7 +246,7 @@ const handleSave = async () => {
   const payload = {
     type_transaction: localTransaction.value.type,
     date_transaction: localTransaction.value.date,
-    quantity: Number(localTransaction.value.quantity),
+    amount_product: Number(localTransaction.value.quantity),
     id_product: localTransaction.value.productId
   }
 

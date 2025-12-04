@@ -8,8 +8,11 @@
       </div>
       <v-btn
         color="primary"
-        prepend-icon="mdi-plus"
+        variant="outlined"
         size="large"
+        rounded="pill"
+        prepend-icon="mdi-plus"
+        class="text-none font-weight-bold px-6"
         @click="openProductDialog()"
       >
         Agregar Producto
@@ -114,12 +117,14 @@ import { ref, computed, onMounted } from 'vue'
 import { useProductStore } from '../store/product'
 import { useAuthStore } from '../store/auth'
 import { useInventoryStore } from '../store/inventory'
+import { useUiStore } from '../store/ui'
 import ProductFormDialog from '../components/products/ProductFormDialog.vue'
 import api from '../api/axios'
 
 const productStore = useProductStore()
 const authStore = useAuthStore()
 const inventoryStore = useInventoryStore()
+const uiStore = useUiStore()
 
 // UI state
 const searchQuery = ref('')
@@ -251,6 +256,12 @@ const saveProduct = async (payload, productId, stockInventory) => {
     }
 
     await productStore.fetchProducts()
+    
+    uiStore.showSnackbar(
+      productId != null ? 'Producto actualizado exitosamente' : 'Producto creado exitosamente',
+      'success'
+    )
+    
     closeProductDialog()
   } catch (err) {
     console.error("Error guardando producto:", err)

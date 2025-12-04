@@ -5,6 +5,7 @@
       cols="12"
       md="6"
       class="d-flex flex-column align-start justify-start left-bg pa-8"
+      :class="{ 'left-bg-dark': theme.change('dark') }"
     >
       <div class="d-flex align-center mb-8">
         <v-icon size="48" color="white" class="mr-4">mdi-warehouse</v-icon>
@@ -34,7 +35,7 @@
         </v-card-title>
 
         <v-card-text>
-          <v-form @submit.prevent="handleLogin" v-model="isFormValid">
+          <v-form ref="form" @submit.prevent="handleLogin" v-model="isFormValid">
             <v-text-field
               v-model="email"
               label="Correo Electrónico"
@@ -74,12 +75,11 @@
             <!-- Botón de iniciar sesión -->
             <v-btn
               type="submit"
-              color="primary"
+              :color="buttonColor"
               block
               size="large"
               class="mb-3"
               :loading="isLoading"
-              :disabled="!isFormValid"
             >
               Iniciar Sesión
             </v-btn>
@@ -103,13 +103,20 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useAuthStore } from '../store/auth'
 import { useRouter } from 'vue-router'
+import { useTheme } from 'vuetify'
 
 const authStore = useAuthStore()
 const router = useRouter()
+const theme = useTheme()
 
+const buttonColor = computed(() => {
+  return theme.global.name.value === 'dark' ? '#5e35b1' : 'primary'
+})
+
+const form = ref(null)
 const showPassword = ref(false)
 const email = ref('')
 const password = ref('')
@@ -128,7 +135,8 @@ const passwordRules = [
 ]
 
 const handleLogin = async () => {
-  if (!isFormValid.value) return
+  const { valid } = await form.value.validate()
+  if (!valid) return
 
   isLoading.value = true
   error.value = ''
@@ -154,6 +162,11 @@ const goToRegister = () => {
 .left-bg {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
+  transition: background 0.3s ease;
+}
+
+.left-bg.left-bg-dark {
+  background: linear-gradient(135deg, #03001C 0%, #301E67 100%);
 }
 
 .login-card {

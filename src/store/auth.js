@@ -6,10 +6,26 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const token = ref(null)
   const isAuthenticated = computed(() => !!user.value)
-  const isAdmin = computed(() => {
-  const role = user.value?.role?.toUpperCase()
-  return role === 'SUPERADMINISTRATOR' || role === 'ROLE_SUPERADMINISTRATOR'
-})
+  const isSuperAdmin = computed(() => {
+    const role = user.value?.role?.toUpperCase()
+    return role === 'SUPERADMINISTRATOR' || role === 'ROLE_SUPERADMINISTRATOR'
+  })
+
+  const isAdministrator = computed(() => {
+    const role = user.value?.role?.toUpperCase()
+    return role === 'ADMINISTRATOR' || role === 'ROLE_ADMINISTRATOR'
+  })
+
+  const isEmployee = computed(() => {
+    const role = user.value?.role?.toUpperCase()
+    return role === 'EMPLOYEE' || role === 'ROLE_EMPLOYEE'
+  })
+
+  const canManageUsers = computed(() => isSuperAdmin.value || isAdministrator.value)
+
+  // SuperAdmin sees ONLY users, so they cannot view operations.
+  // Administrator and Employee can view operations.
+  const canViewOperations = computed(() => isAdministrator.value || isEmployee.value)
   const router = useRouter()
 
   const decodeJwt = (token) => {
@@ -27,6 +43,41 @@ export const useAuthStore = defineStore('auth', () => {
     } catch (e) {
       console.error('Invalid JWT', e)
       return null
+    }
+  }
+
+  const register = async (payload) => {
+    try {
+      const response = await fetch('http://localhost:8020/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token.value}`
+        },
+        body: JSON.stringify(payload)
+      })
+
+      const rawText = await response.text() // ← siempre leer como texto
+
+      if (!response.ok) {
+        throw new Error(rawText || `Error ${response.status}`)
+      }
+
+      let data
+
+      // Intentamos parsear JSON
+      try {
+        data = JSON.parse(rawText)
+      } catch (e) {
+        // No es JSON → devolvemos texto como OK
+        data = rawText
+      }
+
+      return { success: true, data }
+
+    } catch (err) {
+      console.error('Error en registro:', err)
+      return { success: false, error: err.message }
     }
   }
 
@@ -55,7 +106,14 @@ export const useAuthStore = defineStore('auth', () => {
         }
         localStorage.setItem('token', data.token)
         localStorage.setItem('user', JSON.stringify(user.value))
-        router.push('/dashboard')
+
+        // Redirect based on role
+        if (isSuperAdmin.value) {
+          router.push('/users')
+        } else {
+          router.push('/dashboard')
+        }
+
         return { success: true }
       } else {
         return { success: false, error: 'Token inválido' }
@@ -87,8 +145,13 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     token,
     isAuthenticated,
-    isAdmin,
+    isSuperAdmin,
+    isAdministrator,
+    isEmployee,
+    canManageUsers,
+    canViewOperations,
     login,
+    register,
     logout,
     initializeAuth
   }

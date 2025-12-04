@@ -22,6 +22,8 @@
       :user="editingUser"
       :stores="stores"
       :is-saving="isSaving"
+      :can-edit-store="authStore.isSuperAdmin"
+      :default-store-id="authStore.user?.storeU_id"
       @close="closeUserDialog"
       @save="saveUser"
     />
@@ -42,9 +44,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useInventoryStore } from '../store/inventory'
 import { useAuthStore } from '../store/auth'
+import { useUserStore } from '../store/users'
+import { useUiStore } from '../store/ui'
 import UsersHeader from '../components/users/UsersHeader.vue'
 import UsersFilters from '../components/users/UsersFilters.vue'
 import UsersTable from '../components/users/UsersTable.vue'
@@ -53,8 +57,9 @@ import UserDetailsDialog from '../components/users/UserDetailsDialog.vue'
 import DeleteConfirmationDialog from '../components/users/DeleteConfirmationDialog.vue'
 
 const inventoryStore = useInventoryStore()
-
+const userStore = useUserStore()
 const authStore = useAuthStore()
+const uiStore = useUiStore()
 
 // Reactive data
 const searchQuery = ref('')
@@ -69,12 +74,8 @@ const selectedUser = ref(null)
 const editingUser = ref(null)
 
 // Mock users data
-const users = ref([
-  { id: 1, name: 'Usuario Administrador', email: 'admin@store.com', role: 'admin', storeId: null, active: true, lastLogin: '2024-01-15T10:30:00' },
-  { id: 2, name: 'Juan Gerente', email: 'juan@store.com', role: 'manager', storeId: 1, active: true, lastLogin: '2024-01-14T15:45:00' },
-  { id: 3, name: 'Sara Empleada', email: 'sara@store.com', role: 'employee', storeId: 1, active: true, lastLogin: '2024-01-13T09:20:00' },
-  { id: 4, name: 'Miguel Empleado', email: 'miguel@store.com', role: 'employee', storeId: 2, active: false, lastLogin: '2024-01-10T14:15:00' }
-])
+// Users data from store
+const users = computed(() => userStore.users)
 
 // Computed properties
 const stores = computed(() => inventoryStore.stores)
@@ -104,30 +105,27 @@ const saveUser = async (userData) => {
   isSaving.value = true
 
   try {
-    const response = await fetch('http://localhost:8020/auth/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authStore.token}`
-      },
-      body: JSON.stringify(userData)
-    })
+    const result = await authStore.register(userData)
 
-    if (!response.ok) {
-      const text = await response.text()
-      console.error('Error del backend:', text)
-      throw new Error(text || `Error ${response.status}`)
+    if (!result.success) {
+      throw new Error(result.error)
     }
 
-    let savedUser
-    const text = await response.text()
-    try {
-      savedUser = JSON.parse(text)
-    } catch {
-      savedUser = { ...userData, id: Date.now(), lastLogin: null }
+    // Refresh users list
+    if (authStore.isSuperAdmin) {
+      await userStore.fetchUsers()
+    } else {
+      const id_store = authStore.user?.storeU_id
+      if (id_store) {
+        await userStore.fetchUserByStoreId(id_store)
+      }
     }
-
-    users.value.push(savedUser)
+    
+    uiStore.showSnackbar(
+      editingUser.value ? 'Usuario actualizado exitosamente' : 'Usuario creado exitosamente',
+      'success'
+    )
+    
     closeUserDialog()
   } catch (error) {
     console.error('Error saving user:', error)
@@ -173,6 +171,17 @@ const resetFilters = () => {
   searchQuery.value = ''
   selectedRole.value = null
 }
+
+onMounted(async () => {
+  if (authStore.isSuperAdmin) {
+    await userStore.fetchUsers()
+  } else {
+    const id_store = authStore.user?.storeU_id
+    if (id_store) {
+      await userStore.fetchUserByStoreId(id_store)
+    }
+  }
+})
 </script>
 
 <style scoped>

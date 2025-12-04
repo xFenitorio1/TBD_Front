@@ -30,13 +30,19 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const isAuthenticated = localStorage.getItem('user')
   const user = isAuthenticated ? JSON.parse(isAuthenticated) : null
-  
+
   if (to.meta.requiresAuth && !isAuthenticated) {
     next('/login')
-  } 
-  else if (to.meta.requiresAdmin && user?.role !== 'SUPERADMINISTRATOR' && user?.role !== 'ROLE_ADMINISTRATOR') {
-    next('/dashboard')
-  } 
+  }
+  else if (to.meta.requiresAdmin) {
+    const role = user?.role?.toUpperCase()
+    const allowedRoles = ['SUPERADMINISTRATOR', 'ROLE_SUPERADMINISTRATOR', 'ADMINISTRATOR', 'ROLE_ADMINISTRATOR']
+    if (!allowedRoles.includes(role)) {
+      next('/dashboard')
+    } else {
+      next()
+    }
+  }
   else {
     next()
   }

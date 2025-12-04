@@ -20,7 +20,7 @@
             </v-col>
             <v-col cols="12" md="6">
               <v-text-field
-                v-model="localUser.email"
+                v-model="localUser.email_user"
                 label="Dirección de Email"
                 type="email"
                 :rules="emailRules"
@@ -30,7 +30,7 @@
             </v-col>
             <v-col cols="12" md="6" v-if="!isEditing">
               <v-text-field
-                v-model="localUser.password"
+                v-model="localUser.password_user"
                 label="Contraseña"
                 type="password"
                 :rules="passwordRules"
@@ -52,10 +52,23 @@
               <v-select
                 v-model="localUser.role"
                 label="Rol"
-                :items="roles"
+                :items="availableRoles"
                 variant="outlined"
                 required
                 :rules="[v => !!v || 'El rol es requerido']"
+              />
+            </v-col>
+            <v-col cols="12" md="6">
+              <v-select
+                v-model="localUser.storeU_id"
+                label="Tienda"
+                :items="storeItems"
+                item-title="name_store"
+                item-value="id_store"
+                variant="outlined"
+                required
+                :rules="[v => !!v || 'La tienda es requerida']"
+                :disabled="!canEditStore"
               />
             </v-col>
           </v-row>
@@ -85,17 +98,24 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import { useRoleUtils } from '../../composables/useRoleUtils'
-import { useAuthStore } from '../../store/auth'
+import { useStoreStore } from '../../store/stores'
 
-const authStore = useAuthStore()
+const storeStore = useStoreStore()
 
 const props = defineProps({
   modelValue: Boolean,
   user: Object,
-  stores: Array,
-  isSaving: Boolean
+  isSaving: Boolean,
+  canEditStore: {
+    type: Boolean,
+    default: true
+  },
+  defaultStoreId: {
+    type: [Number, String],
+    default: null
+  }
 })
 
 const emit = defineEmits(['update:modelValue', 'close', 'save'])
@@ -106,22 +126,42 @@ const isEditing = computed(() => !!props.user)
 
 const localUser = ref({
   name_user: '',
-  email: '',
-  password: '',
+  email_user: '',
+  password_user: '',
   confirmPassword: '',
-  role: ''
+  role: '',
+  storeU_id: null
+})
+
+const storeItems = computed(() => storeStore.stores)
+
+const availableRoles = computed(() => {
+  if (props.canEditStore) {
+    return roles
+  }
+  return roles.filter(role => role.value !== 'SUPERADMINISTRATOR')
+})
+
+onMounted(async () => {
+  await storeStore.fetchStores()
 })
 
 watch(() => props.user, (newUser) => {
   if (newUser) {
-    localUser.value = { ...newUser, password: '', confirmPassword: '' }
+    localUser.value = { 
+      ...newUser, 
+      password_user: '', 
+      confirmPassword: '',
+      storeU_id: newUser.storeU_id || null
+    }
   } else {
     localUser.value = {
       name_user: '',
-      email: '',
-      password: '',
+      email_user: '',
+      password_user: '',
       confirmPassword: '',
-      role: ''
+      role: '',
+      storeU_id: props.defaultStoreId || null
     }
   }
 }, { immediate: true })
@@ -138,7 +178,7 @@ const passwordRules = [
 
 const confirmPasswordRules = computed(() => [
   v => !!v || 'Por favor confirma tu contraseña',
-  v => v === localUser.value.password || 'Las contraseñas no coinciden'
+  v => v === localUser.value.password_user || 'Las contraseñas no coinciden'
 ])
 
 const handleSave = () => {
@@ -146,13 +186,15 @@ const handleSave = () => {
 
   const payload = {
     name_user: localUser.value.name_user,
-    email: localUser.value.email,
-    password: localUser.value.password,
+    email: localUser.value.email_user,
+    password: localUser.value.password_user,
     role: localUser.value.role,
-    storeU_id: authStore.user?.storeU_id,
+    storeU_id: localUser.value.storeU_id,
   }
-
-
+  console.log("Payload: ", payload)
+  if (isEditing.value) {
+    payload.id_user = props.user.id_user
+  }
 
   emit('save', payload)
 }

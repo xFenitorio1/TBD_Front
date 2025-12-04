@@ -6,81 +6,51 @@
         <h1 class="text-h3 font-weight-bold text-primary">Reportes y Análisis</h1>
         <p class="text-body-1 text-medium-emphasis">Analiza el rendimiento de tu inventario y ventas</p>
       </div>
-    </div>
 
-    <!-- Filters -->
-    <v-card class="mb-6" elevation="2" rounded="lg">
-      <v-card-text>
-        <v-row>
-          <v-col cols="12" md="3">
-            <v-text-field
-              v-model="dateRange"
-              label="Rango de Fechas"
-              type="date"
-              variant="outlined"
-              hide-details
-            />
-          </v-col>
-          <v-col cols="12" md="3">
-            <v-select
-              v-model="selectedStore"
-              label="Tienda"
-              :items="stores"
-              item-title="name"
-              item-value="id"
-              variant="outlined"
-              hide-details
-              clearable
-            />
-          </v-col>
-          <v-col cols="12" md="3">
-            <v-select
-              v-model="selectedPeriod"
-              label="Período"
-              :items="periods"
-              variant="outlined"
-              hide-details
-            />
-          </v-col>
-          <v-col cols="12" md="3">
-            <v-menu>
-              <template v-slot:activator="{ props }">
-                <v-btn
-                  color="primary"
-                  variant="outlined"
-                  prepend-icon="mdi-download"
-                  v-bind="props"
-                  :loading="isExporting"
-                >
-                  Exportar Reporte
-                  <v-icon end>mdi-chevron-down</v-icon>
-                </v-btn>
-              </template>
-              <v-list>
-                <v-list-item @click="exportToPDF">
-                  <template v-slot:prepend>
-                    <v-icon color="red">mdi-file-pdf-box</v-icon>
-                  </template>
-                  <v-list-item-title>Exportar a PDF</v-list-item-title>
-                </v-list-item>
-                <v-list-item @click="exportToExcel">
-                  <template v-slot:prepend>
-                    <v-icon color="green">mdi-file-excel</v-icon>
-                  </template>
-                  <v-list-item-title>Exportar a Excel</v-list-item-title>
-                </v-list-item>
-                <v-list-item @click="exportToCSV">
-                  <template v-slot:prepend>
-                    <v-icon color="blue">mdi-file-delimited</v-icon>
-                  </template>
-                  <v-list-item-title>Exportar a CSV</v-list-item-title>
-                </v-list-item>
-              </v-list>
-            </v-menu>
-          </v-col>
-        </v-row>
-      </v-card-text>
-    </v-card>
+      <v-menu transition="scale-transition" origin="top right">
+        <template v-slot:activator="{ props }">
+          <v-btn
+            color="primary"
+            variant="outlined"
+            size="large"
+            rounded="pill"
+            prepend-icon="mdi-download"
+            v-bind="props"
+            :loading="isExporting"
+            class="text-none font-weight-bold px-6"
+          >
+            Exportar Reporte
+            <v-icon end class="ml-2">mdi-chevron-down</v-icon>
+          </v-btn>
+        </template>
+        <v-list elevation="3" rounded="lg" class="mt-2">
+          <v-list-item @click="exportToPDF" rounded="md" class="mb-1">
+            <template v-slot:prepend>
+              <v-avatar color="red-lighten-5" size="32" class="mr-2">
+                <v-icon color="red" size="20">mdi-file-pdf-box</v-icon>
+              </v-avatar>
+            </template>
+            <v-list-item-title class="font-weight-medium">PDF</v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="exportToExcel" rounded="md" class="mb-1">
+            <template v-slot:prepend>
+              <v-avatar color="green-lighten-5" size="32" class="mr-2">
+                <v-icon color="green" size="20">mdi-file-excel</v-icon>
+              </v-avatar>
+            </template>
+            <v-list-item-title class="font-weight-medium">Excel</v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="exportToCSV" rounded="md">
+            <template v-slot:prepend>
+              <v-avatar color="blue-lighten-5" size="32" class="mr-2">
+                <v-icon color="blue" size="20">mdi-file-delimited</v-icon>
+              </v-avatar>
+            </template>
+            <v-list-item-title class="font-weight-medium">CSV</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+    </div>
 
     <!-- Export Progress -->
     <v-alert
@@ -104,18 +74,6 @@
       <v-col cols="12" sm="6" md="3">
         <v-card class="metric-card" elevation="2" rounded="lg">
           <v-card-text class="d-flex align-center">
-            <v-icon size="48" color="success" class="mr-4">mdi-trending-up</v-icon>
-            <div>
-              <div class="text-h4 font-weight-bold text-success">${{ totalSales.toFixed(2) }}</div>
-              <div class="text-body-2 text-medium-emphasis">Ventas Totales</div>
-            </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-
-      <v-col cols="12" sm="6" md="3">
-        <v-card class="metric-card" elevation="2" rounded="lg">
-          <v-card-text class="d-flex align-center">
             <v-icon size="48" color="info" class="mr-4">mdi-package-variant</v-icon>
             <div>
               <div class="text-h4 font-weight-bold text-info">{{ totalProducts }}</div>
@@ -136,23 +94,11 @@
           </v-card-text>
         </v-card>
       </v-col>
-
-      <v-col cols="12" sm="6" md="3">
-        <v-card class="metric-card" elevation="2" rounded="lg">
-          <v-card-text class="d-flex align-center">
-            <v-icon size="48" color="primary" class="mr-4">mdi-store</v-icon>
-          <div>
-            <div class="text-h4 font-weight-bold text-primary">{{ storeCount }}</div>
-            <div class="text-body-2 text-medium-emphasis">Tiendas Activas</div>
-          </div>
-        </v-card-text>
-      </v-card>
-    </v-col>
   </v-row>
 
   <!-- Charts Row -->
   <v-row class="mb-6">
-    <v-col cols="12" lg="8">
+    <v-col cols="12">
       <v-card elevation="2" rounded="lg">
         <v-card-title class="d-flex align-center">
           <v-icon class="mr-2">mdi-chart-line</v-icon>
@@ -230,70 +176,39 @@
     </v-col>
   </v-row>
 
-  <!-- Low Stock Alerts -->
+  <!-- Average Inventory Days -->
   <v-row class="mt-6">
     <v-col cols="12">
       <v-card elevation="2" rounded="lg">
         <v-card-title class="d-flex align-center">
-          <v-icon class="mr-2" color="warning">mdi-alert</v-icon>
-          Alertas Críticas de Stock Bajo
+          <v-icon class="mr-2" color="info">mdi-calendar-clock</v-icon>
+          Promedio de Días en Inventario
         </v-card-title>
         <v-card-text>
-          <v-data-table
-            :headers="alertHeaders"
-            :items="criticalAlerts"
-            class="elevation-0"
-            hover
-          >
-            <template v-slot:item.product="{ item }">
-              <div class="d-flex align-center">
-                <v-avatar size="32" color="error" class="mr-3">
-                  <v-icon size="16" color="white">mdi-package-variant</v-icon>
+          <div v-if="productStore.avgInventory && productStore.avgInventory.length > 0" class="d-flex flex-column">
+            <template v-for="(item, index) in productStore.avgInventory" :key="index">
+              <div class="d-flex align-center py-3">
+                <v-avatar size="48" color="info" class="mr-4">
+                  <v-icon color="white">mdi-package-variant</v-icon>
                 </v-avatar>
-                <div>
-                  <div class="font-weight-medium">{{ item.product?.name }}</div>
-                  <div class="text-caption text-medium-emphasis">{{ item.product?.sku }}</div>
+                <div class="flex-grow-1">
+                  <div class="text-h6 font-weight-bold">{{ item.name_product }}</div>
+                  <div class="text-body-2 text-medium-emphasis">Producto</div>
+                </div>
+                
+                <div class="text-right">
+                  <div class="text-h5 font-weight-bold text-info">{{ item.average_days }}</div>
+                  <div class="text-caption text-medium-emphasis">Días Promedio</div>
                 </div>
               </div>
+              <v-divider v-if="index < productStore.avgInventory.length - 1" class="my-2"></v-divider>
             </template>
-
-            <template v-slot:item.quantity="{ item }">
-              <v-chip
-                color="error"
-                size="small"
-                variant="tonal"
-              >
-                {{ item.quantity }} restantes
-              </v-chip>
-            </template>
-
-            <template v-slot:item.minStock="{ item }">
-              <span class="text-medium-emphasis">{{ item.minStock }}</span>
-            </template>
-
-            <template v-slot:item.store="{ item }">
-              <span class="font-weight-medium">{{ getStoreName(item.storeId) }}</span>
-            </template>
-
-            <template v-slot:item.actions="{ item }">
-              <v-btn
-                color="primary"
-                size="small"
-                variant="outlined"
-                @click="restockProduct(item)"
-              >
-                Reabastecer
-              </v-btn>
-            </template>
-
-            <template v-slot:no-data>
-              <div class="text-center pa-6">
-                <v-icon size="64" color="success">mdi-check-circle</v-icon>
-                <p class="text-h6 text-medium-emphasis mt-2">¡Excelente! No hay alertas críticas</p>
-                <p class="text-body-2 text-medium-emphasis">Todos los productos tienen stock suficiente</p>
-              </div>
-            </template>
-          </v-data-table>
+          </div>
+          
+          <div v-else class="text-center pa-6">
+            <v-icon size="64" color="grey-lighten-1">mdi-calendar-clock</v-icon>
+            <p class="text-body-1 text-medium-emphasis mt-2">No hay datos de inventario disponibles</p>
+          </div>
         </v-card-text>
       </v-card>
     </v-col>
@@ -306,24 +221,20 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useInventoryStore } from '../store/inventory'
 import { useAuthStore } from '../store/auth'
 import { 
-  generateInventoryReport, 
-  generateSalesReport, 
-  formatDataForExport,
+  generateComprehensiveReport,
   validateExportData 
 } from '../utils/exportUtils'
 import { useStoreStore } from '../store/stores'
 import { useProductStore } from '../store/product'
+import { useTransactionStore } from '../store/transactions'
 import Chart from 'chart.js/auto'
 
 const inventoryStore = useInventoryStore()
 const productStore = useProductStore()
 const storeStore = useStoreStore()
+const transactionStore = useTransactionStore()
 const authStore = useAuthStore()
 
-// Reactive data
-const dateRange = ref(new Date().toISOString().split('T')[0])
-const selectedStore = ref(null)
-const selectedPeriod = ref('month')
 const isExporting = ref(false)
 const exportProgress = ref({
   show: false,
@@ -346,13 +257,7 @@ const alertHeaders = [
   { title: 'Acciones', key: 'actions', sortable: false, width: '120px' }
 ]
 
-// Periods
-const periods = [
-  { title: 'Última Semana', value: 'week' },
-  { title: 'Último Mes', value: 'month' },
-  { title: 'Último Trimestre', value: 'quarter' },
-  { title: 'Último Año', value: 'year' }
-]
+
 
 // Computed properties
 const summaryStockStore = computed(() => storeStore.summaryStockStore || [])
@@ -399,7 +304,6 @@ const exportToPDF = async () => {
     await new Promise(resolve => setTimeout(resolve, 500))
     updateExportProgress(60, 'Generando documento...')
 
-    // Aquí se llama a tu función real
     generatePDFReport()
 
     updateExportProgress(100, 'PDF generado exitosamente')
@@ -424,18 +328,9 @@ const exportToExcel = async () => {
     isExporting.value = true
     showExportProgress('info', 'Generando Excel', 'Preparando datos del reporte...', 10)
     
-    // Simulate Excel generation steps
-    await new Promise(resolve => setTimeout(resolve, 400))
-    updateExportProgress(40, 'Organizando datos en hojas...')
-    
-    await new Promise(resolve => setTimeout(resolve, 400))
-    updateExportProgress(70, 'Aplicando formato y estilos...')
-    
-    await new Promise(resolve => setTimeout(resolve, 400))
-    updateExportProgress(100, 'Excel generado exitosamente')
-    
-    // Here you would call the actual Excel generation function
-    // generateExcelReport()
+    // Generate Excel
+    updateExportProgress(50, 'Generando archivo Excel...')
+    generateExcelReport()
     
     showExportProgress('success', '¡Éxito!', 'Reporte Excel generado y descargado', 100)
     
@@ -458,15 +353,9 @@ const exportToCSV = async () => {
     isExporting.value = true
     showExportProgress('info', 'Generando CSV', 'Preparando datos del reporte...', 20)
     
-    // Simulate CSV generation steps
-    await new Promise(resolve => setTimeout(resolve, 300))
-    updateExportProgress(60, 'Formateando datos...')
-    
-    await new Promise(resolve => setTimeout(resolve, 300))
-    updateExportProgress(100, 'CSV generado exitosamente')
-    
-    // Here you would call the actual CSV generation function
-    // generateCSVReport()
+    // Generate CSV
+    updateExportProgress(50, 'Generando archivo CSV...')
+    generateCSVReport()
     
     showExportProgress('success', '¡Éxito!', 'Reporte CSV generado y descargado', 100)
     
@@ -486,26 +375,25 @@ const exportToCSV = async () => {
 
 const generatePDFReport = () => {
   try {
-    validateExportData(inventoryStore.products)
-    
     const reportData = {
-      products: inventoryStore.products,
-      stores: inventoryStore.stores,
-      lowStockAlerts: inventoryStore.lowStockAlerts,
       summary: {
-        totalProducts: totalProducts.value,
         totalSales: totalSales.value,
+        totalProducts: totalProducts.value,
         lowStockCount: lowStockCount.value,
         storeCount: storeCount.value
-      }
+      },
+      monthlySales: productStore.avgSales || [],
+      bestSupplier: productStore.bestSupplier,
+      inventoryValue: filteredSummary.value || [],
+      avgInventory: productStore.avgInventory || []
     }
     
-    const inventoryReport = generateInventoryReport(reportData, {
-      title: 'Reporte de Inventario Completo',
-      filename: `inventory-report-${new Date().toISOString().split('T')[0]}.pdf`
+    const report = generateComprehensiveReport(reportData, {
+      title: 'Reporte Completo de Análisis',
+      filename: `reporte-completo-${new Date().toISOString().split('T')[0]}`
     })
     
-    return inventoryReport.pdf()
+    return report.pdf()
   } catch (error) {
     throw new Error(`Error generating PDF: ${error.message}`)
   }
@@ -513,25 +401,24 @@ const generatePDFReport = () => {
 
 const generateExcelReport = () => {
   try {
-    validateExportData(inventoryStore.products)
-    
     const reportData = {
-      products: inventoryStore.products,
-      stores: inventoryStore.stores,
-      lowStockAlerts: inventoryStore.lowStockAlerts,
       summary: {
-        totalProducts: totalProducts.value,
         totalSales: totalSales.value,
+        totalProducts: totalProducts.value,
         lowStockCount: lowStockCount.value,
         storeCount: storeCount.value
-      }
+      },
+      monthlySales: productStore.avgSales || [],
+      bestSupplier: productStore.bestSupplier,
+      inventoryValue: filteredSummary.value || [],
+      avgInventory: productStore.avgInventory || []
     }
     
-    const inventoryReport = generateInventoryReport(reportData, {
-      filename: `inventory-report-${new Date().toISOString().split('T')[0]}.xlsx`
+    const report = generateComprehensiveReport(reportData, {
+      filename: `reporte-completo-${new Date().toISOString().split('T')[0]}`
     })
     
-    return inventoryReport.excel()
+    return report.excel()
   } catch (error) {
     throw new Error(`Error generating Excel: ${error.message}`)
   }
@@ -539,19 +426,24 @@ const generateExcelReport = () => {
 
 const generateCSVReport = () => {
   try {
-    validateExportData(inventoryStore.products)
-    
     const reportData = {
-      products: inventoryStore.products,
-      stores: inventoryStore.stores,
-      lowStockAlerts: inventoryStore.lowStockAlerts
+      summary: {
+        totalSales: totalSales.value,
+        totalProducts: totalProducts.value,
+        lowStockCount: lowStockCount.value,
+        storeCount: storeCount.value
+      },
+      monthlySales: productStore.avgSales || [],
+      bestSupplier: productStore.bestSupplier,
+      inventoryValue: filteredSummary.value || [],
+      avgInventory: productStore.avgInventory || []
     }
     
-    const inventoryReport = generateInventoryReport(reportData, {
-      filename: `inventory-products-${new Date().toISOString().split('T')[0]}.csv`
+    const report = generateComprehensiveReport(reportData, {
+      filename: `reporte-completo-${new Date().toISOString().split('T')[0]}`
     })
     
-    return inventoryReport.csv()
+    return report.csv()
   } catch (error) {
     throw new Error(`Error generating CSV: ${error.message}`)
   }
@@ -581,8 +473,26 @@ const formatCurrency = (value) => {
 
 // Mock data for demonstration (remove when real data is available)
 const totalSales = computed(() => {
-  // This should come from actual sales data
-  return 0
+  const transactions = transactionStore.transactions || []
+  const products = productStore.products || []
+  
+  // Filter for sales
+  const sales = transactions.filter(t => {
+    const type = t.type_transaction || t.typeTransaction
+    return ['Sale', 'sale', 'Venta'].includes(type)
+  })
+
+  // Calculate total
+  return sales.reduce((total, t) => {
+    const quantity = Number(t.amount_product || t.amountProduct || 0)
+    const productId = t.id_product || t.idProduct
+    
+    // Find product to get price
+    const product = products.find(p => p.id === productId)
+    const price = Number(product?.price || 0)
+    
+    return total + (quantity * price)
+  }, 0)
 })
 
 const totalProducts = computed(() => {
@@ -590,24 +500,20 @@ const totalProducts = computed(() => {
 })
 
 const lowStockCount = computed(() => {
-  return inventoryStore.lowStockAlerts?.length || 0
+  return productStore.lowStock?.length || 0
 })
 
 const storeCount = computed(() => {
   return inventoryStore.stores?.length || 0
 })
 
-const stores = computed(() => {
-  return inventoryStore.stores || []
-})
+
 
 const categorySales = computed(() => {
-  // Mock data - replace with actual category sales
   return []
 })
 
 const storePerformance = computed(() => {
-  // Mock data - replace with actual store performance
   return []
 })
 
@@ -665,7 +571,7 @@ const initChart = () => {
                 label += ': ';
               }
               if (context.parsed.y !== null) {
-                label += context.parsed.y.toFixed(2);
+                label += context.parsed.y;
               }
               return label;
             }
@@ -680,6 +586,9 @@ const initChart = () => {
             color: 'rgba(0, 0, 0, 0.05)'
           },
           ticks: {
+            callback: function(value) {
+              return value;
+            },
             font: {
               size: 11
             }
@@ -717,6 +626,11 @@ onMounted(async () => {
   await storeStore.fetchSummaryStockStore(userStoreId)
   await productStore.fetchAverageSales()
   await productStore.fetchBestSupplier()
+  await productStore.fetchAverageInventory()
+  await productStore.fetchNoMovements()
+  await productStore.fetchProducts() // Ensure we have products for prices
+  await productStore.fetchLowStock()
+  await transactionStore.fetchStoreTransactions(userStoreId) // Fetch transactions
   initChart()
 })
 </script>

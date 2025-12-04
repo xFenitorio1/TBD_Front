@@ -6,11 +6,13 @@
         <h1 class="text-h3 font-weight-bold text-primary">Panel de Control</h1>
       </div>
       <v-chip
-        :color="user?.role === 'admin' ? 'success' : 'info'"
+        :color="getRoleColor(user?.role)"
         variant="tonal"
         size="large"
+        class="font-weight-bold"
       >
-        {{ user?.role === 'admin' ? 'ADMINISTRADOR' : 'EMPLEADO' }}
+        <v-icon start>{{ getRoleIcon(user?.role) }}</v-icon>
+        {{ getRoleLabel(user?.role) }}
       </v-chip>
     </div>
 
@@ -28,7 +30,7 @@
         </v-card>
       </v-col>
 
-      <v-col cols="12" sm="6" md="3">
+      <v-col cols="12" sm="6" md="3" v-if="authStore.isSuperAdmin">
         <v-card class="summary-card" elevation="2" rounded="lg">
           <v-card-text class="d-flex align-center">
             <v-icon size="48" color="success" class="mr-4">mdi-store</v-icon>
@@ -58,7 +60,7 @@
             <v-icon size="48" color="info" class="mr-4">mdi-swap-horizontal</v-icon>
             <div>
               <div class="text-h4 font-weight-bold">{{ recentTransactions.length }}</div>
-              <div class="text-body-2 text-medium-emphasis">Transacciones de Hoy</div>
+              <div class="text-body-2 text-medium-emphasis">Transacciones totales</div>
             </div>
           </v-card-text>
         </v-card>
@@ -66,7 +68,7 @@
     </v-row>
 
     <!-- Charts and Recent Activity Row -->
-    <v-row class="mb-6">
+    <v-row class="mb-6" v-if="!authStore.isSuperAdmin">
       <v-col cols="12" lg="6">
         <v-card elevation="2" rounded="lg">
           <v-card-title class="d-flex align-center">
@@ -122,6 +124,7 @@ import { useInventoryStore } from '../store/inventory'
 import { useProductStore } from '../store/product'
 import { useStoreStore } from '../store/stores'
 import { useTransactionStore } from '../store/transactions'
+import { useRoleUtils } from '../composables/useRoleUtils'
 
 // Register Chart.js components
 Chart.register(...registerables)
@@ -131,6 +134,7 @@ const productStore = useProductStore()
 const authStore = useAuthStore()
 const inventoryStore = useInventoryStore()
 const transactionStore = useTransactionStore()
+const { getRoleColor, getRoleLabel, getRoleIcon } = useRoleUtils()
 
 // Chart references
 const topProductsChart = ref(null)
@@ -139,9 +143,9 @@ const topProductsChart = ref(null)
 let topProductsChartInstance = null
 
 const user = authStore.user
-const totalProducts = inventoryStore.totalProducts
-const totalStores = inventoryStore.totalStores
-const lowStockAlerts = inventoryStore.lowStockAlerts
+const totalProducts = computed(() => inventoryStore.totalProducts)
+const totalStores = computed(() => storesStore.stores.length)
+const lowStockAlerts = computed(() => productStore.lowStock || [])
 const summaryStock = computed(() => storesStore.summaryStock)
 
 // Real data for charts and analytics
@@ -308,10 +312,15 @@ onMounted(async () => {
   await nextTick()
   
   // Load data first
+  await inventoryStore.fetchProductsFromStore()
+  if (authStore.isSuperAdmin) {
+    await storesStore.fetchStores()
+  }
   await productStore.fetchTop5()
   await productStore.fetchLowStock()
   await productStore.fetchAverageSales()
   await storesStore.fetchSummaryStockStore(id_store)
+  await transactionStore.recentTransactions()
   await productStore.fetchAverageInventory()
   await productStore.fetchNoMovements()
   await productStore.fetchBestSupplier()
@@ -319,8 +328,6 @@ onMounted(async () => {
   // Then init charts with the loaded data
   initTopProductsChart()
   
-  // Ensure products are loaded so we can look up names
-  await inventoryStore.fetchProductsFromStore()
   
   // Fetch recent transactions and map them
   try {
