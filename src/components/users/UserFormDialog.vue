@@ -191,7 +191,7 @@ const handleSave = () => {
     role: localUser.value.role,
     storeU_id: localUser.value.storeU_id,
   }
-  console.log("Payload: ", payload)
+
   if (isEditing.value) {
     payload.id_user = props.user.id_user
   }

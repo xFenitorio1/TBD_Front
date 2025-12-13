@@ -17,7 +17,7 @@ export const useUserStore = defineStore('userStore', {
         const res = await api.get('/user')
 
         this.users = res.data
-        console.log("Users: ", this.users)
+
       } catch (err) {
         console.error('Error obteniendo usuarios:', err)
         this.error = err
@@ -48,7 +48,7 @@ export const useUserStore = defineStore('userStore', {
       try {
         const res = await api.get(`/user/UsersByStore/${store_id}`)
         this.users = res.data
-        console.log("Users: ", this.users)
+
       } catch (err) {
         console.error('Error obteniendo usuarios por tienda:', err)
         this.error = err

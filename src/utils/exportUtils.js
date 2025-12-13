@@ -33,7 +33,7 @@ export const generatePDFReport = (data, options = {}) => {
     const headers = Object.keys(data.products[0])
     const rows = data.products.map((p) => headers.map((h) => p[h]))
 
-    // 👇 aquí va el uso correcto de autoTable
+    // aquí va el uso correcto de autoTable
     autoTable(doc, {
       head: [headers],
       body: rows,

@@ -368,7 +368,7 @@ const getStoreName = (storeId) => {
   return store?.name || 'Tienda Desconocida'
 }
 
-// 🔹 Cargar inventario de la tienda asociada al usuario
+// Cargar inventario de la tienda asociada al usuario
 onMounted(async () => {
   await inventoryStore.fetchProductsFromStore()
   await inventoryStore.fetchInventoryByUser()

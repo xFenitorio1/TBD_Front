@@ -263,7 +263,7 @@ const handleSave = async () => {
     payload.id_storeDE = id_store
   }
 
-  console.log('Saving transaction with payload:', payload)
+
   emit('save', payload, props.transaction?.id_transaction)
 }
 

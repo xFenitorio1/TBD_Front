@@ -15,7 +15,7 @@ export const useStoreStore = defineStore('stores', {
         const res = await api.get('/stores')
         this.stores = res.data
 
-        console.log("Fetched stores:", res.data)
+
       } catch (err) {
         console.error('Error obteniendo tiendas:', err)
         throw err
@@ -58,7 +58,7 @@ export const useStoreStore = defineStore('stores', {
       try {
         const res = await api.get(`/stores/summaryStockStore`)
         this.summaryStockStore = res.data || []
-        console.log("Stock summary for store", id_store, ":", res.data)
+
         return res.data
       } catch (err) {
         console.error('Error obteniendo resumen de stock por tienda:', err)

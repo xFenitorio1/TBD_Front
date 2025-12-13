@@ -1,6 +1,5 @@
 import axios from 'axios'
 
-// ✅ Instancia base configurada
 const api = axios.create({
   baseURL: 'http://localhost:8020/api',
   headers: {
@@ -8,7 +7,7 @@ const api = axios.create({
   }
 })
 
-// ✅ Interceptor para agregar el token automáticamente
+// Interceptor para agregar el token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
@@ -20,15 +19,15 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
-// ✅ Manejo de errores global (opcional)
+// Interceptor para manejar errores
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 403) {
-      console.warn('🚫 Acceso prohibido: token inválido o rol insuficiente')
+      console.warn('Acceso prohibido: token inválido o rol insuficiente')
     }
     if (error.response && error.response.status === 401) {
-      console.warn('🔑 Token expirado o no autorizado')
+      console.warn('Token expirado o no autorizado')
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       window.location.href = '/login'

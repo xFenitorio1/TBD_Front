@@ -340,7 +340,7 @@ const saveTransaction = async (payload, transactionId) => {
       console.warn('Update transaction not yet implemented')
     } else {
       // Create transaction using the store
-      console.log("Saving transaction with payload:", payload)
+
       await transactionStore.createTransaction(payload)
     }
     
@@ -415,7 +415,7 @@ const formatDate = (date) => {
 // Cargar datos al montar
 onMounted(async () => {
   const id_store = authStore.user?.storeU_id
-  console.log("Fetching transactions for store ID:", id_store)
+
   await transactionStore.fetchStoreTransactions(id_store)
   await inventoryStore.fetchProductsFromStore()
   const unusual = await transactionStore.getUnusualTransactions()

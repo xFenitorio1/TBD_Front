@@ -208,7 +208,7 @@ const saveProduct = async (payload, productId, stockInventory) => {
               productId,
               stockInventory
             )
-            console.log('✅ Stock de inventario actualizado')
+
           } else {
             // Create new inventory entry if it doesn't exist
             const inventoryPayload = {
@@ -217,7 +217,7 @@ const saveProduct = async (payload, productId, stockInventory) => {
               stock_inventory: Number(stockInventory)
             }
             await api.post('/inventory/create', inventoryPayload)
-            console.log('✅ Inventario creado para producto existente')
+
           }
         } catch (inventoryErr) {
           console.error('Error actualizando inventario:', inventoryErr)
@@ -226,7 +226,7 @@ const saveProduct = async (payload, productId, stockInventory) => {
     } else {
       // Create product
       createdProduct = await productStore.createProduct(payload)
-      console.log("Respuesta al crear producto:", createdProduct)
+
 
       // ❗ SIEMPRE volver a cargar productos porque backend no devuelve ID
       await productStore.fetchProducts()
@@ -239,7 +239,7 @@ const saveProduct = async (payload, productId, stockInventory) => {
       if (!newProduct) {
         console.error("❌ No fue posible determinar el ID del producto creado")
       } else {
-        console.log("✅ Producto encontrado:", newProduct)
+
 
         // Crear inventario
         if (stockInventory !== null && authStore.user?.storeU_id) {
@@ -250,7 +250,7 @@ const saveProduct = async (payload, productId, stockInventory) => {
           }
 
           await api.post('/inventory/create', inventoryPayload)
-          console.log("✅ Inventario creado")
+
         }
       }
     }
@@ -289,7 +289,7 @@ const deleteProduct = async () => {
           authStore.user.storeU_id,
           productId
         )
-        console.log('✅ Entrada de inventario eliminada')
+
       } catch (inventoryErr) {
       
         console.warn('Inventario no encontrado o ya eliminado (continuando):', inventoryErr.message)

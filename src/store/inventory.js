@@ -13,7 +13,7 @@ export const useInventoryStore = defineStore('inventory', () => {
   const totalStores = computed(() => stores.value.length)
   const totalProducts = computed(() => products.value.length)
   const lowStockAlerts = computed(() =>
-  inventory.value.filter(item => item.quantity <= item.minStock)
+    inventory.value.filter(item => item.quantity <= item.minStock)
   )
 
   const getProductById = (id) => products.value.find(p => p.id === id)
@@ -29,11 +29,7 @@ export const useInventoryStore = defineStore('inventory', () => {
       }))
   }
 
-  // ----------------------------------------
-  // ⚡ NUEVOS ENDPOINTS AÑADIDOS
-  // ----------------------------------------
-
-  // 🟦 1. Obtener TODO el inventario
+  //  1. Obtener TODO el inventario
   const fetchAllInventory = async () => {
     try {
       const res = await api.get('/inventory')
@@ -43,7 +39,7 @@ export const useInventoryStore = defineStore('inventory', () => {
     }
   }
 
-  // 🟦 2. Obtener inventario por producto
+  // 2. Obtener inventario por producto
   const fetchInventoryByProduct = async (productId) => {
     try {
       const res = await api.get(`/inventory/product/${productId}`)
@@ -53,7 +49,7 @@ export const useInventoryStore = defineStore('inventory', () => {
     }
   }
 
-  // 🟦 3. Obtener inventario por IDs compuestos
+  // 3. Obtener inventario por IDs compuestos
   const fetchInventoryByIds = async (storeId, productId) => {
     try {
       const res = await api.get(`/inventory/${storeId}/${productId}`)
@@ -63,7 +59,7 @@ export const useInventoryStore = defineStore('inventory', () => {
     }
   }
 
-  // 🟦 4. Crear inventario
+  //  4. Crear inventario
   const createInventory = async (inventoryItem) => {
     try {
       const res = await api.post('/inventory/create', inventoryItem)
@@ -74,7 +70,7 @@ export const useInventoryStore = defineStore('inventory', () => {
     }
   }
 
-  // 🟦 5. Eliminar inventario
+  // 5. Eliminar inventario
   const deleteInventory = async (storeId, productId) => {
     try {
       await api.delete(`/inventory/delete/${storeId}/${productId}`)
@@ -85,10 +81,6 @@ export const useInventoryStore = defineStore('inventory', () => {
       console.error('Error eliminando inventario:', err)
     }
   }
-
-  // ----------------------------------------
-  // 🔵 FUNCIONES QUE YA EXISTÍAN
-  // ----------------------------------------
 
   const fetchProductsFromStore = async () => {
     try {
@@ -107,7 +99,7 @@ export const useInventoryStore = defineStore('inventory', () => {
       const user = authStore.user
 
       if (!user.storeU_id) {
-        console.warn('⚠️ Usuario sin storeU_id')
+        console.warn('Usuario sin ')
         return
       }
 
@@ -126,7 +118,6 @@ export const useInventoryStore = defineStore('inventory', () => {
 
       const res = await api.get(`/inventory/store/${user.storeU_id}/products`)
       products.value = res.data
-      console.log("🛒 Productos de la tienda:", products.value)
     } catch (err) {
       console.error("Error cargando productos por tienda:", err)
     }
@@ -148,7 +139,7 @@ export const useInventoryStore = defineStore('inventory', () => {
     }
   }
 
-  // 🟦 6. Actualizar stock de inventario
+  // 6. Actualizar stock de inventario
   const updateInventoryStock = async (storeId, productId, stock) => {
     try {
       const inventoryPayload = {
@@ -165,7 +156,6 @@ export const useInventoryStore = defineStore('inventory', () => {
     }
   }
 
-  // ----------------------------------------
 
   return {
     stores,
