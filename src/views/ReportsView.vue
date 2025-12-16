@@ -40,14 +40,6 @@
             </template>
             <v-list-item-title class="font-weight-medium">Excel</v-list-item-title>
           </v-list-item>
-          <v-list-item @click="exportToCSV" rounded="md">
-            <template v-slot:prepend>
-              <v-avatar color="blue-lighten-5" size="32" class="mr-2">
-                <v-icon color="blue" size="20">mdi-file-delimited</v-icon>
-              </v-avatar>
-            </template>
-            <v-list-item-title class="font-weight-medium">CSV</v-list-item-title>
-          </v-list-item>
         </v-list>
       </v-menu>
     </div>
