@@ -98,9 +98,13 @@ export const useAuthStore = defineStore('auth', () => {
 
       const payload = decodeJwt(data.token)
       if (payload) {
+
+        const role = payload.rol ? payload.rol.replace('ROLE_', '') : null
+
+
         user.value = {
           email: payload.sub,
-          role: payload.rol,
+          role: role,
           storeU_id: payload.storeU_id
         }
         localStorage.setItem('token', data.token)
@@ -135,7 +139,13 @@ export const useAuthStore = defineStore('auth', () => {
     const storedUser = localStorage.getItem('user')
     const storedToken = localStorage.getItem('token')
     if (storedUser && storedToken) {
-      user.value = JSON.parse(storedUser)
+      const parsedUser = JSON.parse(storedUser)
+      // Ensure role is sanitized even if restoring from old bad state
+      if (parsedUser.role && parsedUser.role.includes('ROLE_')) {
+        parsedUser.role = parsedUser.role.replace('ROLE_', '')
+        localStorage.setItem('user', JSON.stringify(parsedUser))
+      }
+      user.value = parsedUser
       token.value = storedToken
     }
   }

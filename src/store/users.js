@@ -19,7 +19,7 @@ export const useUserStore = defineStore('userStore', {
         // Normalizar roles
         this.users = res.data.map(u => ({
           ...u,
-          role: u.role && !u.role.startsWith('ROLE_') ? `ROLE_${u.role}` : u.role
+          role: u.role && !u.role.startsWith('') ? `${u.role}` : u.role
         }))
 
       } catch (err) {
@@ -55,7 +55,7 @@ export const useUserStore = defineStore('userStore', {
         // Normalizar roles
         this.users = res.data.map(u => ({
           ...u,
-          role: u.role && !u.role.startsWith('ROLE_') ? `ROLE_${u.role}` : u.role
+          role: u.role && !u.role.startsWith('') ? `${u.role}` : u.role
         }))
 
       } catch (err) {

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
+    "axios": "^1.13.2",
     "chart.js": "^4.5.0",
     "exceljs": "^4.4.0",
     "jspdf": "^3.0.2",
