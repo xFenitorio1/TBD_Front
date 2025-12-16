@@ -11,12 +11,6 @@
         <v-icon size="48" color="white" class="mr-4">mdi-warehouse</v-icon>
         <span class="text-h4 font-weight-bold text-white">StockOverflowed</span>
       </div>
-      <div class="text-h6 text-white font-weight-light mt-8">
-        Algo mamalón
-      </div>
-      <div class="text-body-1 text-white mt-4 opacity-75">
-        Algo mamalón x2
-      </div>
     </v-col>
 
     <!-- Right side: Login form -->
