@@ -86,23 +86,10 @@ Una aplicación web moderna y fácil de usar para gestionar el inventario en mú
    npm run build
    ```
 
-## 🔑 Credenciales de Demo
-
-### Usuario Administrador
-- **Email**: admin@store.com
-- **Contraseña**: admin123
-- **Acceso**: Acceso total al sistema, incluyendo gestión de usuarios
-
-### Usuario Empleado
-- **Email**: employee@store.com
-- **Contraseña**: emp123
-- **Acceso**: Acceso limitado (sin gestión de usuarios)
-
 ## 📱 Interfaz de Usuario
 
 ### Principios de Diseño
 - **Estética Material Design** moderna y limpia
-- **Diseño responsivo** para todos los tamaños de dispositivos
 - **Navegación intuitiva** con menú lateral
 - **Esquema de colores consistente** y tipografía clara
 - **Elementos de diseño** enfocados en la accesibilidad
@@ -173,46 +160,6 @@ theme: {
 }
 ```
 
-## 📊 Estructura de Datos
-
-### Modelo de Producto
-```javascript
-{
-  id: Number,
-  name: String,
-  description: String,
-  price: Number,
-  sku: String,
-  category: String
-}
-```
-
-### Modelo de Inventario
-```javascript
-{
-  id: Number,
-  productId: Number,
-  storeId: Number,
-  quantity: Number,
-  minStock: Number
-}
-```
-
-### Modelo de Transacción
-```javascript
-{
-  id: Number,
-  type: 'Sale' | 'Transfer' | 'Receipt',
-  date: String,
-  productId: Number,
-  quantity: Number,
-  storeId: Number,
-  amount: Number,        // Para ventas
-  fromStoreId: Number,   // Para transferencias
-  toStoreId: Number,     // Para transferencias
-  supplier: String       // Para recepciones
-}
-```
 
 ## 🔒 Características de Seguridad
 
@@ -222,13 +169,6 @@ theme: {
 - **Manejo seguro de contraseñas**
 - **Gestión de sesiones** con localStorage
 
-## 🤝 Contribución
-
-1. Haz un Fork del repositorio
-2. Crea una rama para tu funcionalidad (`git checkout -b feature/NuevaFuncionalidad`)
-3. Haz tus cambios (`git commit -m 'Agrega nueva funcionalidad'`)
-4. Haz Push a la rama (`git push origin feature/NuevaFuncionalidad`)
-5. Abre un Pull Request
 
 ## 📝 Licencia
 
