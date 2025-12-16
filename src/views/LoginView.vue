@@ -85,7 +85,13 @@
               </p>
               <div class="d-flex flex-column gap-1">
                 <div class="text-caption">
-                  <strong>Admin:</strong> carla.diaz@valpo.com / hashedpass789
+                  <strong>Super Admin:</strong> ana.gutierrez@sys.com / hashedpass123
+                </div>
+                <div class="text-caption">
+                  <strong>Admin:</strong> benjamin.soto@stgo.com / hashedpass456
+                </div>
+                <div class="text-caption">
+                  <strong>Usuario:</strong> carla.diaz@valpo.com / hashedpass789
                 </div>
               </div>
             </div>
