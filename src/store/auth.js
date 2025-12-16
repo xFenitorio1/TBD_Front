@@ -8,23 +8,21 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!user.value)
   const isSuperAdmin = computed(() => {
     const role = user.value?.role?.toUpperCase()
-    return role === 'SUPERADMINISTRATOR' || role === 'ROLE_SUPERADMINISTRATOR'
+    return role === 'SUPERADMINISTRATOR'
   })
 
   const isAdministrator = computed(() => {
     const role = user.value?.role?.toUpperCase()
-    return role === 'ADMINISTRATOR' || role === 'ROLE_ADMINISTRATOR'
+    return role === 'ADMINISTRATOR'
   })
 
   const isEmployee = computed(() => {
     const role = user.value?.role?.toUpperCase()
-    return role === 'EMPLOYEE' || role === 'ROLE_EMPLOYEE'
+    return role === 'EMPLOYEE'
   })
 
   const canManageUsers = computed(() => isSuperAdmin.value || isAdministrator.value)
 
-  // SuperAdmin sees ONLY users, so they cannot view operations.
-  // Administrator and Employee can view operations.
   const canViewOperations = computed(() => isAdministrator.value || isEmployee.value)
   const router = useRouter()
 
