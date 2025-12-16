@@ -8,6 +8,7 @@ import TransactionsView from '../views/TransactionsView.vue'
 import ReportsView from '../views/ReportsView.vue'
 import UsersView from '../views/UsersView.vue'
 import RegisterView from '../views/RegisterView.vue'
+import { ROLES } from '../composables/useRoleUtils'
 
 const routes = [
   { path: '/', redirect: '/login' },
@@ -34,9 +35,12 @@ router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth && !isAuthenticated) {
     next('/login')
   }
+  else if (to.path === '/login' && isAuthenticated) {
+    next('/dashboard')
+  }
   else if (to.meta.requiresAdmin) {
-    const role = user?.role?.toUpperCase()
-    const allowedRoles = ['SUPERADMINISTRATOR', 'ROLE_SUPERADMINISTRATOR', 'ADMINISTRATOR', 'ROLE_ADMINISTRATOR']
+    const role = user?.role
+    const allowedRoles = [ROLES.SUPER_ADMIN, ROLES.ADMIN]
     if (!allowedRoles.includes(role)) {
       next('/dashboard')
     } else {

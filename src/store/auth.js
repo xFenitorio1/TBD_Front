@@ -1,24 +1,25 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { ROLES } from '../composables/useRoleUtils'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const token = ref(null)
   const isAuthenticated = computed(() => !!user.value)
   const isSuperAdmin = computed(() => {
-    const role = user.value?.role?.toUpperCase()
-    return role === 'SUPERADMINISTRATOR'
+    const role = user.value?.role
+    return role === ROLES.SUPER_ADMIN
   })
 
   const isAdministrator = computed(() => {
-    const role = user.value?.role?.toUpperCase()
-    return role === 'ADMINISTRATOR'
+    const role = user.value?.role
+    return role === ROLES.ADMIN
   })
 
   const isEmployee = computed(() => {
-    const role = user.value?.role?.toUpperCase()
-    return role === 'EMPLOYEE'
+    const role = user.value?.role
+    return role === ROLES.EMPLOYEE
   })
 
   const canManageUsers = computed(() => isSuperAdmin.value || isAdministrator.value)

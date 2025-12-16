@@ -99,7 +99,7 @@
 
 <script setup>
 import { ref, watch, computed, onMounted } from 'vue'
-import { useRoleUtils } from '../../composables/useRoleUtils'
+import { useRoleUtils, ROLES } from '../../composables/useRoleUtils'
 import { useStoreStore } from '../../store/stores'
 
 const storeStore = useStoreStore()
@@ -139,7 +139,7 @@ const availableRoles = computed(() => {
   if (props.canEditStore) {
     return roles
   }
-  return roles.filter(role => role.value !== 'SUPERADMINISTRATOR')
+  return roles.filter(role => role.value !== ROLES.SUPER_ADMIN)
 })
 
 onMounted(async () => {

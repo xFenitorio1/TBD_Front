@@ -1,3 +1,9 @@
+export const ROLES = {
+  SUPER_ADMIN: 'ROLE_SUPERADMINISTRATOR',
+  ADMIN: 'ROLE_ADMINISTRATOR',
+  EMPLOYEE: 'ROLE_EMPLOYEE'
+}
+
 export const useRoleUtils = () => {
   const getRoleColor = (role) => {
     const colors = {

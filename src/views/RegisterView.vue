@@ -114,6 +114,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { ROLES } from '../composables/useRoleUtils'
 
 const router = useRouter()
 
@@ -159,7 +160,7 @@ const handleRegister = async () => {
       name_user: fullName.value,
       email: email.value,
       password: password.value,
-      role: 'ADMINISTRATOR'
+      role: ROLES.ADMIN
     }
 
 
