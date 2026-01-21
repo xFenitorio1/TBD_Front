@@ -82,7 +82,7 @@
         prepend-icon="mdi-account-group"
         title="Usuarios"
         value="users"
-        @click="() => { navigateTo('/users') }"
+        @click="navigateTo('/users')"
         :active="$route.path === '/users'"
       />
     </v-list>
