@@ -19,7 +19,8 @@ const routes = [
   { path: '/transactions', component: TransactionsView, meta: { requiresAuth: true } },
   { path: '/reports', component: ReportsView, meta: { requiresAuth: true } },
   { path: '/users', component: UsersView, meta: { requiresAuth: true, requiresAdmin: true } },
-  { path: '/register', component: RegisterView, meta: { requiresAuth: false } }
+  { path: '/register', component: RegisterView, meta: { requiresAuth: false } },
+  { path: '/logistics', component: () => import('../views/LogisticsView.vue'), meta: { requiresAuth: true } }
 ]
 
 const router = createRouter({

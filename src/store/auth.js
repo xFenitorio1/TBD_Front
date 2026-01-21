@@ -38,7 +38,14 @@ export const useAuthStore = defineStore('auth', () => {
       else if (pad === 3) payload += '='
       else if (pad === 1) payload += '==='
       const json = atob(payload)
-      return JSON.parse(json)
+      const parsed = JSON.parse(json)
+
+      // Normalize role if it comes with prefix
+      if (parsed.rol && parsed.rol.startsWith('ROLE_')) {
+        parsed.rol = parsed.rol.replace('ROLE_', '')
+      }
+
+      return parsed
     } catch (e) {
       console.error('Invalid JWT', e)
       return null

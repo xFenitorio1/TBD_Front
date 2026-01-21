@@ -15,12 +15,7 @@ export const useUserStore = defineStore('userStore', {
       this.loading = true
       try {
         const res = await api.get('/user')
-
-        // Normalizar roles
-        this.users = res.data.map(u => ({
-          ...u,
-          role: u.role && !u.role.startsWith('ROLE_') ? `ROLE_${u.role}` : u.role
-        }))
+        this.users = res.data
 
       } catch (err) {
         console.error('Error obteniendo usuarios:', err)
@@ -51,12 +46,7 @@ export const useUserStore = defineStore('userStore', {
       this.loading = true
       try {
         const res = await api.get(`/user/UsersByStore/${store_id}`)
-
-        // Normalizar roles
-        this.users = res.data.map(u => ({
-          ...u,
-          role: u.role && !u.role.startsWith('ROLE_') ? `ROLE_${u.role}` : u.role
-        }))
+        this.users = res.data
 
       } catch (err) {
         console.error('Error obteniendo usuarios por tienda:', err)

@@ -61,6 +61,14 @@
       />
 
       <v-list-item
+        prepend-icon="mdi-map-clock-outline"
+        title="Logística"
+        value="logistics"
+        @click="navigateTo('/logistics')"
+        :active="$route.path === '/logistics'"
+      />
+
+      <v-list-item
         v-if="!isSuperAdmin"
         prepend-icon="mdi-chart-line"
         title="Reportes"

@@ -40,7 +40,7 @@ export const useStoreStore = defineStore('stores', {
         await this.fetchStores()
       } catch (err) {
         console.error('Error actualizando tienda:', err)
-        throw er
+        throw err
       }
     },
 
